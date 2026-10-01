@@ -177,7 +177,7 @@
   }
 
   // ---------- one script ----------
-  function renderScript(s) {
+  function renderScript(s, tab) {
     const r = s.resources || {};
     const flags = (s.flags || []).map((f) => `<span class="tag tag-flag">${f === "gpu" ? "GPU ready" : f === "docker" ? "Docker" : esc(f)}</span>`).join("");
     const url = s.port ? (s.proto && !/^https?$/.test(s.proto) ? `${s.proto}://<container-ip>:${s.port}` : `${s.proto || "http"}://<container-ip>:${s.port}`) : null;
@@ -216,11 +216,17 @@
           </div></header>
           <p class="lede">${esc(s.description)}</p>
 
+          <div class="tabs-bar" role="tablist" aria-label="${esc(s.name)} guide" data-tabs>
+            <button type="button" role="tab" data-tab="script" aria-selected="true">Install with script</button>
+          </div>
+
+          <div class="tab-panel" data-panel="script" role="tabpanel">
           ${installPanel(s, where)}
 
           ${resourcesPanel || afterPanel ? `<div class="cols">${resourcesPanel}${afterPanel}</div>` : ""}
 
           ${s.notes && s.notes.length ? `<div class="panel"><h2>Good to know</h2><ul class="notes">${s.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></div>` : ""}
+          </div>
 
           <div class="links">
             <a class="btn" href="${esc(s.website)}" target="_blank" rel="noopener">Website ↗</a>
@@ -235,6 +241,29 @@
       </div>`;
     document.title = `${s.name} · GFL Proxmox Scripts`;
     if (CFG.fieldsFor(s)) CFG.refresh(app, s, cfgValues(s), command(s));
+    addGuideTabs(s, tab);
+  }
+
+  // Loads the app's guide and adds one tab per "## " section. Runs after the page is shown,
+  // so the script tab never waits for it.
+  async function addGuideTabs(s, wanted) {
+    const parts = await window.GFL_GUIDES.load(s.slug);
+    const bar = $("[data-tabs]", app);
+    if (!bar || currentScript() !== s || !parts.length) return;
+    for (const p of parts) {
+      bar.insertAdjacentHTML("beforeend", `<button type="button" role="tab" data-tab="${p.id}" aria-selected="false">${esc(p.title)}</button>`);
+      $(`[data-panel="script"]`, app).insertAdjacentHTML("afterend",
+        `<div class="tab-panel guide" data-panel="${p.id}" role="tabpanel" hidden>${p.html}</div>`);
+    }
+    if (wanted && wanted !== "script" && $(`[data-panel="${wanted}"]`, app)) showTab(wanted, false);
+  }
+
+  function showTab(id, remember = true) {
+    const s = currentScript();
+    if (!s) return;
+    app.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
+    app.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== id; });
+    if (remember) history.replaceState(null, "", `#${s.slug}${id === "script" ? "" : "~" + id}`);
   }
 
   function scriptPager(s) {
@@ -278,7 +307,9 @@
     return state.cfg[s.slug];
   }
 
-  const currentScript = () => state.data && state.data.scripts.find((x) => x.slug === decodeURIComponent(location.hash.slice(1)));
+  // "#jellyfin" or "#jellyfin~docker" (an app page opened on one of its guide tabs).
+  const hashParts = () => decodeURIComponent(location.hash.replace(/^#/, "")).split("~");
+  const currentScript = () => state.data && state.data.scripts.find((x) => x.slug === hashParts()[0]);
 
   function setMode(mode) {
     const s = currentScript();
@@ -350,7 +381,7 @@
   state.view = null;
 
   function route() {
-    const id = decodeURIComponent(location.hash.replace(/^#/, ""));
+    const [id, tab] = hashParts();
     const doc = state.docs.find((d) => d.id === id);
     const script = state.data.scripts.find((s) => s.slug === id);
     const view = doc ? "doc" : script ? "script" : "home";
@@ -366,7 +397,7 @@
     swap(() => {
       document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === (doc ? "docs" : "scripts")));
       if (doc) renderDoc(doc);
-      else if (script) renderScript(script);
+      else if (script) renderScript(script, tab);
       else { renderHome(); document.title = "GFL Proxmox Scripts"; }
 
       const rail = $(".rail", app);
@@ -426,6 +457,8 @@
       return updateCatalog();
     }
     if (e.target.closest("[data-print]")) return window.print();
+    const tabBtn = e.target.closest("[data-tab]");
+    if (tabBtn) return showTab(tabBtn.dataset.tab);
     const mode = e.target.closest("[data-mode]");
     if (mode) return setMode(mode.dataset.mode);
     if (e.target.closest("[data-reset]")) {

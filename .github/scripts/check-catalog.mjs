@@ -19,6 +19,9 @@ for (const s of data.scripts) {
   for (const key of ["name", "summary", "description", "website", "docs"]) if (!s[key]) errors.push(`${where} missing "${key}"`);
 
   if (s.icon && !existsSync(join(root, "frontend", s.icon))) errors.push(`${where} icon frontend/${s.icon} does not exist`);
+  const guide = join(root, "frontend/guides", `${s.slug}.md`);
+  if (!existsSync(guide)) errors.push(`${where} frontend/guides/${s.slug}.md is missing`);
+  else if (!/^## Using it$/m.test(readFileSync(guide, "utf8"))) errors.push(`${where} its guide has no "## Using it" section`);
   const script = s.script || `ct/${s.slug}.sh`;
   if (!existsSync(join(root, script))) { errors.push(`${where} ${script} does not exist`); continue; }
   if (s.type !== "ct") continue;

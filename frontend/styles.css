@@ -326,6 +326,32 @@ input, textarea, select, [contenteditable="true"] { caret-color: var(--cyan); }
 .pager a { text-decoration: none; }
 .pager small { display: block; color: var(--muted); font-size: 12px; }
 
+/* guide tabs on app pages */
+.tabs-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; margin-bottom: -6px; }
+.tabs-bar button {
+  flex: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); cursor: pointer;
+  padding: 10px 14px; font: 600 16px/1 var(--display); letter-spacing: 0.03em; margin-bottom: -1px;
+}
+.tabs-bar button:hover { color: var(--text); }
+.tabs-bar button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--purple); }
+.tab-panel { display: grid; gap: 26px; min-width: 0; }
+.tab-panel[hidden] { display: none; }
+.guide { display: block; max-width: 80ch; }
+.guide h3 { font-size: 20px; margin: 26px 0 8px; }
+.guide h3:first-child { margin-top: 4px; }
+.guide p, .guide li { color: #c9c9dc; }
+.guide ul, .guide ol { padding-left: 22px; display: grid; gap: 6px; }
+.guide ol li::marker { color: var(--purple); font-family: var(--display); font-weight: 700; }
+.guide code { background: var(--bg2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.86em; color: #e2d4ff; }
+.code-block { position: relative; margin: 12px 0; }
+.code-block pre {
+  margin: 0; background: var(--term); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; padding-top: 30px;
+  overflow-x: auto; font-size: 13px; line-height: 1.65; color: #d9d9ee;
+}
+.code-block pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+.code-lang { position: absolute; left: 14px; top: 8px; font: 600 11px/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.copy-small { position: absolute; right: 8px; top: 6px; padding: 5px 10px; border-radius: 8px; font-size: 13px; }
+
 /* favourites, "new" badge, filters */
 .card-wrap { position: relative; display: flex; min-width: 0; }
 .card-wrap .card { flex: 1; }
@@ -403,7 +429,7 @@ input, textarea, select, [contenteditable="true"] { caret-color: var(--cyan); }
 @media print {
   :root { --text: #111; --muted: #555; --line: #ccc; --panel: #fff; --panel2: #fff; --bg: #fff; --bg2: #fff; --term: #f4f4f4; }
   body { background: #fff; color: #111; }
-  .topbar, .rail, .footer, .links, .pager, .pager-tip, .seg, .copy, .fav, .toast, .cfg-head .btn, .hint { display: none !important; }
+  .topbar, .rail, .footer, .links, .pager, .pager-tip, .seg, .copy, .fav, .toast, .cfg-head .btn, .hint, .tabs-bar { display: none !important; }
   .shell { display: block; }
   .page { padding: 0; }
   .panel, .cmd { border-color: #ccc; break-inside: avoid; }
