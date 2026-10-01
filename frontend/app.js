@@ -23,10 +23,11 @@
   const initials = (name) => name.replace(/\(.*\)/, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   const ram = (mib) => (mib >= 1024 ? `${+(mib / 1024).toFixed(1)} GiB` : `${mib} MiB`);
 
-  // The app's logo on a tile tinted with its category color; the initials show if the logo fails to load.
+  // The app's logo on a tile tinted with its category color. Initials only appear when there is
+  // no logo, or when it fails to load (see the error listener below).
   const icon = (s) =>
-    `<span class="mono-icon" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">${esc(initials(s.name))}` +
-    (s.icon ? `<img class="app-logo" src="${esc(s.icon)}" alt="" loading="lazy" decoding="async">` : "") +
+    `<span class="mono-icon" data-initials="${esc(initials(s.name))}" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">` +
+    (s.icon ? `<img class="app-logo" src="${esc(s.icon)}" alt="" loading="lazy" decoding="async">` : esc(initials(s.name))) +
     `</span>`;
   const typeTag = (s) => `<span class="tag tag-${s.type}">${TYPE_LABEL[s.type]}</span>`;
   const cmdBox = (text, live = false) =>
@@ -307,8 +308,14 @@
     if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; renderHome(); }
   });
 
-  // A logo that fails to load is removed, uncovering the initials behind it.
-  document.addEventListener("error", (e) => { if (e.target.classList?.contains("app-logo")) e.target.remove(); }, true);
+  // A logo that fails to load is swapped for the app's initials.
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (!img.classList?.contains("app-logo")) return;
+    const tile = img.parentElement;
+    img.remove();
+    tile.textContent = tile.dataset.initials;
+  }, true);
 
   app.addEventListener("input", onConfigInput);
   app.addEventListener("change", onConfigInput);
