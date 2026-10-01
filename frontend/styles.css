@@ -223,6 +223,63 @@ code, pre, kbd { font-family: var(--mono); }
 .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
 .hint code, .panel code, .doc code { background: var(--bg2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 0.86em; color: #e2d4ff; }
 
+/* ---------- install modes + custom settings ---------- */
+.install-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.install-head h2 { margin: 0; }
+.seg { display: inline-flex; padding: 3px; gap: 3px; background: var(--bg); border: 1px solid var(--line); border-radius: 11px; }
+.seg button {
+  border: 0; background: none; color: var(--muted); cursor: pointer; padding: 7px 14px; border-radius: 8px;
+  font: 600 15px/1 var(--display); letter-spacing: 0.03em;
+}
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: #fff; }
+.linkish { background: none; border: 0; padding: 0; color: var(--cyan); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+.cfg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.cfg-head h2 { margin-bottom: 4px; }
+.cfg-head .hint { margin: 0; }
+.btn-small { padding: 7px 11px; font-size: 14px; cursor: pointer; }
+.cfg-form { display: grid; gap: 6px; }
+.cfg-group { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 16px 0 6px; min-width: 0; }
+.cfg-group legend {
+  padding: 0 10px 0 0; font: 600 12px/1 var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan);
+}
+.cfg-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px 16px; margin-top: 10px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field > label { font-size: 13px; font-weight: 500; color: #d2d2e6; }
+.field .live { color: var(--muted); font-weight: 400; font-family: var(--mono); font-size: 12px; }
+.field input[type="text"], .field select {
+  width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 11px; font: 14px var(--mono); min-width: 0;
+}
+.field select { font-family: var(--body); cursor: pointer; }
+.field input::placeholder { color: #5d5d78; font-family: var(--body); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2); }
+.field input[aria-invalid="true"] { border-color: var(--red); }
+.fhint { font-size: 12px; color: var(--muted); min-height: 1em; line-height: 1.35; }
+.fhint.is-err { color: var(--red); }
+.fhint.is-warn { color: var(--amber); }
+.field-switch { justify-content: center; }
+.switch { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #d2d2e6; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track {
+  flex: none; width: 38px; height: 22px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line);
+  position: relative; transition: background 0.15s;
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--muted); transition: transform 0.15s, background 0.15s;
+}
+.switch input:checked + .track { background: rgba(168, 85, 247, 0.35); border-color: var(--purple); }
+.switch input:checked + .track::after { transform: translateX(16px); background: #fff; }
+.switch input:focus-visible + .track { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.cfg-foot { margin-top: 14px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.cfg-status { font-size: 13px; color: var(--green); margin-bottom: 8px; }
+.cfg-foot .cfg-status { margin-bottom: 0; }
+.cfg-status.is-err { color: var(--red); }
+.cmd.is-blocked { opacity: 0.55; }
+.copy:disabled { cursor: not-allowed; filter: grayscale(1); }
+
 /* ---------- docs ---------- */
 .doc { max-width: 78ch; min-width: 0; }
 .doc h1 { font-size: 40px; margin-bottom: 10px; }

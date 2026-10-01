@@ -59,6 +59,7 @@ next_dev_index() {
 # pick_storage VAR content -> sets VAR to a storage that can hold that content type
 pick_storage() {
   local var="$1" content="$2" name type avail pick
+  if [ -n "${GFL_STORAGE:-}" ]; then printf -v "$var" '%s' "$GFL_STORAGE"; return; fi
   local -a menu=()
   while read -r name type _ _ _ avail _; do
     menu+=("$name" "${type}, $((avail / 1024 / 1024)) GB free" "OFF")

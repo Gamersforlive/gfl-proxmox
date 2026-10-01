@@ -5,7 +5,9 @@
 (() => {
   const $ = (sel, el = document) => el.querySelector(sel);
   const app = $("#app");
-  const state = { data: null, docs: [], cat: "all", q: "" };
+  const state = { data: null, docs: [], cat: "all", q: "", cfg: {}, mode: "quick" };
+  const CFG = window.GFL_CONFIG;
+  try { state.mode = localStorage.getItem("gfl-install-mode") === "custom" ? "custom" : "quick"; } catch { /* storage blocked */ }
 
   const CAT_COLORS = {
     docker: "#2496ed", media: "#a855f7", network: "#22d3ee", security: "#34d399", monitoring: "#fbbf24",
@@ -24,8 +26,8 @@
   const icon = (s) =>
     `<span class="mono-icon" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">${esc(initials(s.name))}</span>`;
   const typeTag = (s) => `<span class="tag tag-${s.type}">${TYPE_LABEL[s.type]}</span>`;
-  const cmdBox = (text) =>
-    `<div class="cmd"><code>${esc(text)}</code><button class="copy" type="button" data-copy="${esc(text)}" aria-label="Copy command">` +
+  const cmdBox = (text, live = false) =>
+    `<div class="cmd"${live ? " data-cmd" : ""}><code>${esc(text)}</code><button class="copy" type="button" data-copy="${esc(text)}" aria-label="Copy command">` +
     `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span></button></div>`;
 
   function specs(s) {
@@ -120,7 +122,7 @@
         <dt>Memory</dt><dd class="m">${ram(r.ram)} (${r.ram} MiB)</dd>
         <dt>Disk</dt><dd class="m">${r.disk} GB</dd>
         ${s.port ? `<dt>Port</dt><dd class="m">${s.port}</dd>` : ""}
-      </dl>${s.type === "ct" ? `<p class="hint">Change any of these with Advanced settings or <a href="#settings">environment variables</a>.</p>` : ""}</div>`;
+      </dl><p class="hint">Change any of these under <button type="button" class="linkish" data-mode="custom">Custom settings</button> above.</p></div>`;
 
     const afterPanel = s.type === "tool" ? "" : `
       <div class="panel"><h2>After install</h2><dl class="kv">
@@ -139,11 +141,7 @@
           </div></header>
           <p class="lede">${esc(s.description)}</p>
 
-          <div class="panel"><h2>${s.type === "tool" ? "Run it" : "Install"}</h2>
-            <p>${where}</p>
-            ${cmdBox(command(s))}
-            <p class="hint">Not sure how? Follow <a href="#getting-started">Getting started</a>. Read the <a href="${esc(sourceUrl(scriptPath(s)))}" target="_blank" rel="noopener">script source</a> before running it.</p>
-          </div>
+          ${installPanel(s, where)}
 
           ${resourcesPanel || afterPanel ? `<div class="cols">${resourcesPanel}${afterPanel}</div>` : ""}
 
@@ -159,6 +157,65 @@
         </article>
       </div>`;
     document.title = `${s.name} · GFL Proxmox Scripts`;
+    if (CFG.fieldsFor(s)) CFG.refresh(app, s, cfgValues(s), command(s));
+  }
+
+  // Quick install (defaults) or Custom settings (a form that builds the command).
+  function installPanel(s, where) {
+    const custom = CFG.fieldsFor(s) && state.mode === "custom";
+    const seg = CFG.fieldsFor(s)
+      ? `<div class="seg" role="group" aria-label="Install mode">
+           <button type="button" data-mode="quick" aria-pressed="${!custom}">Quick install</button>
+           <button type="button" data-mode="custom" aria-pressed="${!!custom}">Custom settings</button>
+         </div>`
+      : "";
+    const form = CFG.fieldsFor(s)
+      ? `<section class="panel cfg" data-cfg ${custom ? "" : "hidden"} aria-label="Custom settings">
+           <div class="cfg-head"><div><h2>Custom settings</h2><p class="hint">Your command updates as you type. Bridge, gateway, VLAN, DNS and storage are remembered for the next app.</p></div>
+             <button type="button" class="btn btn-small" data-reset>Reset to defaults</button></div>
+           <form class="cfg-form" autocomplete="off" onsubmit="return false">${CFG.formHtml(s, cfgValues(s))}</form>
+           <div class="cfg-foot"><div class="cfg-status" data-status></div>${cmdBox(command(s), true)}</div>
+         </section>`
+      : "";
+    return `
+      <div class="panel">
+        <div class="install-head"><h2>${s.type === "tool" ? "Run it" : "Install"}</h2>${seg}</div>
+        <p>${where}</p>
+        <div data-quick ${custom ? "hidden" : ""}>${cmdBox(command(s))}</div>
+        <div data-custom ${custom ? "" : "hidden"}><div class="cfg-status" data-status></div>${cmdBox(command(s), true)}</div>
+        <p class="hint">Not sure how? Follow <a href="#getting-started">Getting started</a>. Read the <a href="${esc(sourceUrl(scriptPath(s)))}" target="_blank" rel="noopener">script source</a> before running it.</p>
+      </div>
+      ${form}`;
+  }
+
+  function cfgValues(s) {
+    if (!state.cfg[s.slug]) state.cfg[s.slug] = CFG.initialValues(s);
+    return state.cfg[s.slug];
+  }
+
+  const currentScript = () => state.data && state.data.scripts.find((x) => x.slug === decodeURIComponent(location.hash.slice(1)));
+
+  function setMode(mode) {
+    const s = currentScript();
+    if (!s) return;
+    state.mode = mode;
+    try { localStorage.setItem("gfl-install-mode", mode); } catch { /* storage blocked */ }
+    const custom = mode === "custom";
+    app.querySelectorAll("[data-mode]").forEach((b) => b.hasAttribute("aria-pressed") && b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+    $("[data-quick]", app).hidden = custom;
+    $("[data-custom]", app).hidden = !custom;
+    $("[data-cfg]", app).hidden = !custom;
+    if (custom) $("[data-cfg]", app).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function onConfigInput(e) {
+    const el = e.target.closest("[data-k]");
+    const s = currentScript();
+    if (!el || !s) return;
+    const v = cfgValues(s);
+    v[el.dataset.k] = el.type === "checkbox" ? (el.checked ? el.dataset.on : el.dataset.off) : el.value;
+    CFG.remember(v);
+    CFG.refresh(app, s, v, command(s));
   }
 
   function scriptRail(active) {
@@ -232,11 +289,23 @@
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".copy");
-    if (btn) return copy(btn);
+    if (btn) return btn.disabled ? undefined : copy(btn);
+    const mode = e.target.closest("[data-mode]");
+    if (mode) return setMode(mode.dataset.mode);
+    if (e.target.closest("[data-reset]")) {
+      const s = currentScript();
+      state.cfg[s.slug] = CFG.defaults(s);
+      $(".cfg-form", app).innerHTML = CFG.formHtml(s, state.cfg[s.slug]);
+      CFG.refresh(app, s, state.cfg[s.slug], command(s));
+      return;
+    }
     const cat = e.target.closest("[data-cat]");
     if (cat) { state.cat = cat.dataset.cat; renderHome(); return; }
     if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; renderHome(); }
   });
+
+  app.addEventListener("input", onConfigInput);
+  app.addEventListener("change", onConfigInput);
 
   $("#q").addEventListener("input", (e) => {
     state.q = e.target.value.trim();

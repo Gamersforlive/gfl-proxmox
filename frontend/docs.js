@@ -19,7 +19,7 @@ ${run("tools/post-pve-install.sh")}
 ${run("ct/jellyfin.sh")}
 
 <h2>4. Choose default settings</h2>
-<p>A menu asks how to set up the container. <b>Default settings</b> is right for almost everyone: the next free ID, DHCP on <code>vmbr0</code>, an unprivileged container, and CPU, memory and disk sized for that app. Pick <b>Advanced</b> to choose a static IP, VLAN, password or size. See <a href="#settings">Settings and overrides</a>.</p>
+<p>A menu asks how to set up the container. <b>Default settings</b> is right for almost everyone: the next free ID, DHCP on <code>vmbr0</code>, an unprivileged container, and CPU, memory and disk sized for that app. Want a static IP, VLAN, more memory or a password? Switch the app page to <b>Custom settings</b> before copying, or pick <b>Advanced</b> in the menu. See <a href="#settings">Settings and overrides</a>.</p>
 
 <h2>5. Open the app</h2>
 <p>When the script finishes it prints the address to open, such as <code>http://192.168.1.42:8096</code>. The container also appears in the Proxmox tree with a <b>gfl</b> tag, and its <b>Notes</b> panel links back to the app's page here.</p>
@@ -74,11 +74,15 @@ ${run("ct/jellyfin.sh")}
 <tr><td>GPU</td><td>Passed in when the app benefits and the host has <code>/dev/dri</code></td></tr>
 </table></div>
 
-<h2>Advanced settings</h2>
-<p>Choose <b>Advanced</b> in the first menu to set the ID, hostname, container type, root password, CPU, RAM, disk, bridge, static IP and gateway, VLAN, GPU, SSH root login and verbose output. Press <kbd>Esc</kbd> on any question to cancel without changing anything.</p>
+<h2>Custom settings on the website (easiest)</h2>
+<p>Every app page has a <b>Custom settings</b> switch next to <b>Quick install</b>. Fill in CPU, memory, disk, a static IP, VLAN, DNS, IPv6, storage and more. The command updates as you type and checks your input, for example that the gateway is in the same subnet as the address. The script then shows a summary and asks once before it creates anything.</p>
+<p>Your bridge, gateway, DNS and storage choices are remembered in your browser, so the next app is quicker to set up. Passwords never go into the command: pick <b>Ask me in the terminal</b> and the script asks for it.</p>
+
+<h2>Advanced settings in the terminal</h2>
+<p>Run the plain command and choose <b>Advanced</b> in the first menu. It asks for the ID, hostname, container type, root password, CPU, RAM, swap, disk, bridge, IPv4 and gateway, IPv6, VLAN, DNS server, search domain, GPU, start at boot, SSH root login and verbose output. Press <kbd>Esc</kbd> on any question to cancel without changing anything.</p>
 
 <h2>Environment variables</h2>
-<p>Put variables in front of the command to change defaults without the menus. Add <code>GFL_MODE=default</code> to skip the menus completely, which is useful for automation.</p>
+<p>The website's Custom settings writes these for you; you can also type them yourself. <code>GFL_MODE=confirm</code> skips the menus but still shows the summary; <code>GFL_MODE=default</code> asks nothing at all, which is useful for automation.</p>
 <pre><code>var_cpu=4 var_ram=8192 var_disk=64 GFL_MODE=default \\
   bash -c "$(curl -fsSL ${raw}/ct/ollama.sh)"</code></pre>
 <div class="table-wrap"><table>
@@ -87,9 +91,14 @@ ${run("ct/jellyfin.sh")}
 <tr><td><code>var_os</code>, <code>var_version</code></td><td>Template, for example <code>ubuntu</code> and <code>24.04</code> (apps are tested on Debian 13)</td></tr>
 <tr><td><code>var_unprivileged</code></td><td><code>1</code> unprivileged (default) or <code>0</code> privileged</td></tr>
 <tr><td><code>var_gpu</code></td><td><code>yes</code> or <code>no</code>: pass <code>/dev/dri</code> through</td></tr>
+<tr><td><code>var_swap</code>, <code>var_onboot</code></td><td>Swap in MiB (default 512); <code>0</code> to not start at boot</td></tr>
 <tr><td><code>CT_ID</code>, <code>HN</code></td><td>Container ID and hostname</td></tr>
 <tr><td><code>BRG</code>, <code>NET</code>, <code>GATE</code>, <code>VLAN</code></td><td>Bridge, <code>dhcp</code> or <code>192.168.1.50/24</code>, gateway, VLAN tag</td></tr>
-<tr><td><code>PW</code></td><td>Root password (leave unset for console autologin)</td></tr>
+<tr><td><code>IPV6</code>, <code>GATE6</code></td><td><code>none</code> (default), <code>auto</code>, <code>dhcp</code> or <code>fd00::50/64</code>, and its gateway</td></tr>
+<tr><td><code>NS</code>, <code>SD</code></td><td>DNS server(s) and search domain (default: the host's)</td></tr>
+<tr><td><code>MTU</code>, <code>MAC</code></td><td>Network MTU and a fixed MAC address</td></tr>
+<tr><td><code>GFL_ASK_PW</code></td><td><code>yes</code> asks for a root password in the terminal (otherwise console autologin)</td></tr>
+<tr><td><code>SSH</code></td><td><code>yes</code> allows root login over SSH</td></tr>
 <tr><td><code>GFL_STORAGE</code>, <code>GFL_TEMPLATE_STORAGE</code></td><td>Storage for the disk and for templates, skipping the storage menu</td></tr>
 <tr><td><code>VERBOSE</code></td><td><code>yes</code> shows every command's output</td></tr>
 <tr><td><code>GFL_RAW</code></td><td>Where scripts are downloaded from (a fork, a commit or a local folder)</td></tr>

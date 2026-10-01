@@ -9,9 +9,13 @@ network_check
 update_os
 
 msg_info "Installing Caddy"
-add_repo caddy https://dl.cloudsmith.io/public/caddy/stable/gpg.key https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
-$STD apt-get install -y caddy
-msg_ok "Installed Caddy $(caddy version | awk '{print $1}')"
+# The official .deb from GitHub (includes the systemd service). Caddy's apt repository
+# is signed with a key Debian 13's stricter signature check rejects.
+VER=$(gh_latest caddyserver/caddy)
+fetch "https://github.com/caddyserver/caddy/releases/download/${VER}/caddy_${VER#v}_linux_amd64.deb" -o /tmp/caddy.deb
+$STD apt-get install -y /tmp/caddy.deb
+rm -f /tmp/caddy.deb
+msg_ok "Installed Caddy ${VER}"
 
 motd_ssh
 customize

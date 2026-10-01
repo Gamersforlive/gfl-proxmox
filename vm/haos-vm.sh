@@ -19,8 +19,15 @@ CORES="${CORES:-2}"
 RAM="${RAM:-4096}"
 DISK="${DISK:-32G}"
 BRG="${BRG:-vmbr0}"
+VLAN="${VLAN:-}"
+NAME="${NAME:-haos}"
+if [[ "$DISK" =~ ^[0-9]+$ ]]; then DISK="${DISK}G"; fi
+if qm status "$VMID" >/dev/null 2>&1 || pct status "$VMID" >/dev/null 2>&1; then
+  msg_error "ID ${VMID} is already used by another VM or container."
+  exit 1
+fi
 if [ "${GFL_MODE:-}" != "default" ]; then
-  confirm "Home Assistant OS" "Create VM ${VMID} with Home Assistant OS ${VER}?\n\n${CORES} cores, ${RAM} MiB RAM, ${DISK} disk, bridge ${BRG}.\n(Set VMID, CORES, RAM, DISK or BRG before running to change these.)" || cancelled
+  confirm "Home Assistant OS" "Create VM ${VMID} (${NAME}) with Home Assistant OS ${VER}?\n\n${CORES} cores, ${RAM} MiB RAM, ${DISK} disk\nNetwork: ${BRG}${VLAN:+ VLAN ${VLAN}}, DHCP (set a fixed IP inside Home Assistant)\n(Change these on the website's Custom settings, or set VMID, NAME, CORES, RAM, DISK, BRG, VLAN before running.)" || cancelled
 fi
 pick_storage STORAGE images
 
@@ -33,8 +40,8 @@ unxz "${TMP}/haos.qcow2.xz"
 msg_ok "Downloaded Home Assistant OS ${VER}"
 
 msg_info "Creating VM ${VMID}"
-qm create "$VMID" -name haos -tags "gfl;smarthome" -machine q35 -bios ovmf -agent 1 \
-  -cores "$CORES" -memory "$RAM" -net0 "virtio,bridge=${BRG}" -ostype l26 \
+qm create "$VMID" -name "$NAME" -tags "gfl;smarthome" -machine q35 -bios ovmf -agent 1 \
+  -cores "$CORES" -memory "$RAM" -net0 "virtio,bridge=${BRG}${VLAN:+,tag=${VLAN}}" -ostype l26 \
   -scsihw virtio-scsi-pci -onboot 1 -tablet 0 >>"$GFL_LOG"
 qm set "$VMID" -efidisk0 "${STORAGE}:1,efitype=4m,pre-enrolled-keys=0" >>"$GFL_LOG"
 qm set "$VMID" -scsi0 "${STORAGE}:0,import-from=${TMP}/haos.qcow2,discard=on,ssd=1" >>"$GFL_LOG"

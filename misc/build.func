@@ -38,6 +38,8 @@ variables() {
   var_docker="${var_docker:-no}"
   var_gpu="${var_gpu:-no}"
   var_tun="${var_tun:-no}"
+  var_swap="${var_swap:-512}"
+  var_onboot="${var_onboot:-1}"
   var_tags="${var_tags:-}"
   VERBOSE="${VERBOSE:-no}"
 }
@@ -71,16 +73,27 @@ arch_check() {
 }
 
 # ---- settings --------------------------------------------------------------------
+# Every setting comes from, in order: the Advanced menu, an environment variable (the
+# website's "Custom settings" builds such a command), or the app's defaults.
 default_settings() {
   CT_ID="${CT_ID:-$(pvesh get /cluster/nextid)}"
   HN="${HN:-$NSAPP}"
+  HN="${HN,,}"
   DISK_SIZE="$var_disk"
   CORE_COUNT="$var_cpu"
   RAM_SIZE="$var_ram"
+  SWAP_SIZE="$var_swap"
+  ONBOOT="$var_onboot"
   BRG="${BRG:-vmbr0}"
   NET="${NET:-dhcp}"
   GATE="${GATE:-}"
+  IPV6="${IPV6:-none}"
+  GATE6="${GATE6:-}"
   VLAN="${VLAN:-}"
+  MTU="${MTU:-}"
+  MAC="${MAC:-}"
+  NS="${NS:-}"
+  SD="${SD:-}"
   CT_TYPE="$var_unprivileged"
   PW="${PW:-}"
   SSH="${SSH:-no}"
@@ -88,15 +101,56 @@ default_settings() {
   if [ ! -e /dev/dri/renderD128 ]; then GPU="no"; fi
 }
 
+# Stops with one clear message listing every setting that is wrong.
+validate_settings() {
+  local oct='(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])'
+  local ip4="(${oct}\.){3}${oct}" bad="" v
+  if ! [[ "$CT_ID" =~ ^[0-9]+$ ]] || [ "$CT_ID" -lt 100 ]; then
+    bad+="\n     Container ID must be a number from 100 up (got '${CT_ID}')"
+  elif pct status "$CT_ID" >/dev/null 2>&1 || qm status "$CT_ID" >/dev/null 2>&1; then
+    bad+="\n     ID ${CT_ID} is already used by another container or VM"
+  fi
+  if ! [[ "$HN" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]; then
+    bad+="\n     Hostname '${HN}' may only use letters, numbers and dashes"
+  fi
+  for v in CORE_COUNT RAM_SIZE DISK_SIZE SWAP_SIZE; do
+    if ! [[ "${!v}" =~ ^[0-9]+$ ]]; then bad+="\n     ${v} must be a whole number (got '${!v}')"; fi
+  done
+  if [ "$NET" != "dhcp" ] && ! [[ "$NET" =~ ^${ip4}/([0-9]|[12][0-9]|3[0-2])$ ]]; then
+    bad+="\n     IPv4 must be dhcp or an address like 192.168.1.50/24 (got '${NET}')"
+  fi
+  if [ -n "$GATE" ] && ! [[ "$GATE" =~ ^${ip4}$ ]]; then bad+="\n     Gateway '${GATE}' is not an IPv4 address"; fi
+  case "$IPV6" in
+    none | auto | dhcp) ;;
+    *) if ! [[ "$IPV6" =~ ^[0-9a-fA-F:]+/[0-9]{1,3}$ ]]; then bad+="\n     IPv6 must be none, auto, dhcp or an address like fd00::50/64"; fi ;;
+  esac
+  if [ -n "$VLAN" ] && { ! [[ "$VLAN" =~ ^[0-9]+$ ]] || [ "$VLAN" -lt 1 ] || [ "$VLAN" -gt 4094 ]; }; then
+    bad+="\n     VLAN must be a number from 1 to 4094"
+  fi
+  if [ -n "$MTU" ] && ! [[ "$MTU" =~ ^[0-9]+$ ]]; then bad+="\n     MTU must be a number"; fi
+  if [ -n "$MAC" ] && ! [[ "$MAC" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then bad+="\n     MAC '${MAC}' is not like BC:24:11:AA:BB:CC"; fi
+  if [ -n "$NS" ] && ! [[ "$NS" =~ ^[0-9a-fA-F.:\ ]+$ ]]; then bad+="\n     DNS server must be one or more IP addresses"; fi
+  if [ -n "$bad" ]; then
+    msg_error "Some settings are not valid:${bad}"
+    exit 1
+  fi
+}
+
 show_summary() {
-  local type="Unprivileged"
+  local type="Unprivileged" v6="" login="console autologin, no password"
   if [ "$CT_TYPE" = "0" ]; then type="Privileged"; fi
+  if [ "$IPV6" != "none" ]; then v6="${IPV6}${GATE6:+ via ${GATE6}}"; fi
+  if [ -n "$PW" ]; then login="root password set"; fi
   echo -e "${INFO} Container ID:  ${BL}${CT_ID}${CL}"
   echo -e "${INFO} Hostname:      ${BL}${HN}${CL}"
   echo -e "${INFO} OS:            ${BL}${var_os} ${var_version}${CL} (${type})"
-  echo -e "${INFO} CPU / RAM:     ${BL}${CORE_COUNT} cores / ${RAM_SIZE} MiB${CL}"
+  echo -e "${INFO} CPU / RAM:     ${BL}${CORE_COUNT} cores / ${RAM_SIZE} MiB${CL} (swap ${SWAP_SIZE} MiB)"
   echo -e "${INFO} Disk:          ${BL}${DISK_SIZE} GB${CL}"
-  echo -e "${INFO} Network:       ${BL}${BRG}, ${NET}${GATE:+ via ${GATE}}${VLAN:+, VLAN ${VLAN}}${CL}"
+  echo -e "${INFO} Network:       ${BL}${BRG}, ${NET}${GATE:+ via ${GATE}}${VLAN:+, VLAN ${VLAN}}${MTU:+, MTU ${MTU}}${CL}"
+  if [ -n "$v6" ]; then echo -e "${INFO} IPv6:          ${BL}${v6}${CL}"; fi
+  if [ -n "$NS$SD" ]; then echo -e "${INFO} DNS:           ${BL}${NS:-host default}${SD:+, search ${SD}}${CL}"; fi
+  echo -e "${INFO} Login:         ${BL}${login}${CL}"
+  if [ "$ONBOOT" = "0" ]; then echo -e "${INFO} Start at boot: ${BL}no${CL}"; fi
   if [ "$GPU" = "yes" ]; then echo -e "${INFO} GPU:           ${BL}/dev/dri passed through${CL}"; fi
   echo
 }
@@ -107,36 +161,55 @@ ask() { # ask VAR "Title" "Question" "default" -> sets VAR; Esc/Cancel stops the
   printf -v "$1" '%s' "$answer"
 }
 
+ask_password() { # asks twice so a typo can't lock you out
+  local again
+  while true; do
+    PW=$(whiptail --backtitle "$BACKTITLE" --title "Root password" --passwordbox \
+      "Root password for the container.\nLeave empty to log in automatically from the Proxmox console." 10 64 3>&1 1>&2 2>&3) || exit_script
+    if [ -z "$PW" ]; then return; fi
+    again=$(whiptail --backtitle "$BACKTITLE" --title "Root password" --passwordbox "Type the password again." 8 64 3>&1 1>&2 2>&3) || exit_script
+    if [ "$PW" = "$again" ]; then return; fi
+    whiptail --backtitle "$BACKTITLE" --title "Root password" --msgbox "The passwords did not match. Try again." 8 64
+  done
+}
+
 advanced_settings() {
   default_settings
   ask CT_ID "Container ID" "Container ID (must be unused)" "$CT_ID"
-  if pct status "$CT_ID" >/dev/null 2>&1 || qm status "$CT_ID" >/dev/null 2>&1; then
-    msg_error "ID ${CT_ID} is already in use."
-    exit 1
-  fi
   ask HN "Hostname" "Hostname (letters, numbers and dashes)" "$HN"
-  HN=$(echo "$HN" | tr -cd 'a-zA-Z0-9-' | tr '[:upper:]' '[:lower:]')
+  HN="${HN,,}"
   if whiptail --backtitle "$BACKTITLE" --title "Container type" --yes-button "Unprivileged" --no-button "Privileged" \
     --yesno "Unprivileged is safer and works for almost every app.\nPick Privileged only if an app's page tells you to." 10 64; then
     CT_TYPE=1
   else
     CT_TYPE=0
   fi
-  PW=$(whiptail --backtitle "$BACKTITLE" --title "Root password" --passwordbox \
-    "Root password for the container.\nLeave empty to log in automatically from the Proxmox console." 10 64 3>&1 1>&2 2>&3) || exit_script
+  ask_password
   ask CORE_COUNT "CPU" "CPU cores" "$CORE_COUNT"
   ask RAM_SIZE "Memory" "RAM in MiB" "$RAM_SIZE"
+  ask SWAP_SIZE "Swap" "Swap in MiB (0 for none)" "$SWAP_SIZE"
   ask DISK_SIZE "Disk" "Disk size in GB" "$DISK_SIZE"
   ask BRG "Network bridge" "Bridge to connect to" "$BRG"
-  ask NET "IP address" "Type dhcp, or a static address with prefix (example: 192.168.1.50/24)" "$NET"
+  ask NET "IPv4 address" "Type dhcp, or a static address with prefix (example: 192.168.1.50/24)" "$NET"
   if [ "$NET" != "dhcp" ]; then
-    if ! [[ "$NET" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]]; then
-      msg_error "\"${NET}\" is not an address like 192.168.1.50/24"
-      exit 1
-    fi
-    ask GATE "Gateway" "Gateway (your router, example: 192.168.1.1)" ""
+    ask GATE "Gateway" "IPv4 gateway (your router, example: 192.168.1.1)" "$GATE"
+  else
+    GATE=""
   fi
-  ask VLAN "VLAN" "VLAN tag (leave empty for none)" ""
+  local v6
+  v6=$(whiptail --backtitle "$BACKTITLE" --title "IPv6" --menu "How should the container get IPv6?" 14 64 4 \
+    "none" "No IPv6 (default)" "auto" "SLAAC (router advertisements)" "dhcp" "DHCPv6" "static" "A fixed address" \
+    3>&1 1>&2 2>&3) || exit_script
+  if [ "$v6" = "static" ]; then
+    ask IPV6 "IPv6 address" "IPv6 address with prefix (example: fd00::50/64)" ""
+    ask GATE6 "IPv6 gateway" "IPv6 gateway (leave empty for none)" ""
+  else
+    IPV6="$v6"
+    GATE6=""
+  fi
+  ask VLAN "VLAN" "VLAN tag (leave empty for none)" "$VLAN"
+  ask NS "DNS server" "DNS server(s), separated by spaces.\nLeave empty to use the host's DNS." "$NS"
+  ask SD "Search domain" "DNS search domain (example: home.lan).\nLeave empty to use the host's." "$SD"
   if [ -e /dev/dri/renderD128 ]; then
     local -a def=(--defaultno)
     if [ "$var_gpu" = "yes" ]; then def=(); fi
@@ -147,6 +220,11 @@ advanced_settings() {
       GPU="no"
     fi
   fi
+  if whiptail --backtitle "$BACKTITLE" --title "Start at boot" --yesno "Start this container when the host boots?" 8 64; then
+    ONBOOT=1
+  else
+    ONBOOT=0
+  fi
   if whiptail --backtitle "$BACKTITLE" --title "SSH" --defaultno --yesno "Allow root login over SSH?" 8 64; then
     SSH="yes"
   fi
@@ -155,6 +233,9 @@ advanced_settings() {
   fi
 }
 
+# GFL_MODE=default  defaults + environment, no questions at all (automation)
+# GFL_MODE=confirm  defaults + environment, then the summary and one yes/no (the website)
+# (unset)           the Default / Advanced menu
 start() {
   if ! command -v pveversion >/dev/null 2>&1; then
     # Not on a Proxmox host: this is the `update` command inside a container.
@@ -165,25 +246,34 @@ start() {
   pve_check
   arch_check
 
-  if [ "${GFL_MODE:-}" = "default" ]; then
-    default_settings
-  else
-    local choice
-    choice=$(whiptail --backtitle "$BACKTITLE" --title "${APP}" --menu \
-      "This creates a new ${APP} container.\nThe defaults suit most people." 14 64 3 \
-      "1" "Use default settings (recommended)" \
-      "2" "Advanced: choose ID, network, size..." \
-      "3" "Cancel" 3>&1 1>&2 2>&3) || exit_script
-    case "$choice" in
-      1) default_settings ;;
-      2) advanced_settings ;;
-      *) exit_script ;;
-    esac
-  fi
+  case "${GFL_MODE:-}" in
+    default | confirm) default_settings ;;
+    *)
+      local choice
+      choice=$(whiptail --backtitle "$BACKTITLE" --title "${APP}" --menu \
+        "This creates a new ${APP} container.\nThe defaults suit most people." 14 64 3 \
+        "1" "Use default settings (recommended)" \
+        "2" "Advanced: choose ID, network, size..." \
+        "3" "Cancel" 3>&1 1>&2 2>&3) || exit_script
+      case "$choice" in
+        1) default_settings ;;
+        2) advanced_settings ;;
+        *) exit_script ;;
+      esac
+      ;;
+  esac
+  if [ "${GFL_ASK_PW:-no}" = "yes" ] && [ -z "$PW" ]; then ask_password; fi
+  validate_settings
   header_info
   show_summary
   if [ "${GFL_MODE:-}" != "default" ]; then
-    whiptail --backtitle "$BACKTITLE" --title "${APP}" --yesno "Create container ${CT_ID} (${HN}) now?" 8 64 || exit_script
+    # A plain prompt keeps the summary above it on screen.
+    local reply
+    read -r -p "  Create container ${CT_ID} (${HN}) with these settings? [Y/n] " reply </dev/tty || exit_script
+    case "${reply,,}" in
+      "" | y | yes) ;;
+      *) exit_script ;;
+    esac
   fi
 }
 
@@ -241,16 +331,22 @@ build_container() {
   if [ "$CT_TYPE" = "1" ] && [ "$var_docker" = "yes" ]; then features="nesting=1,keyctl=1"; fi
   local net="name=eth0,bridge=${BRG},ip=${NET}"
   if [ -n "$GATE" ]; then net+=",gw=${GATE}"; fi
+  if [ "$IPV6" != "none" ]; then net+=",ip6=${IPV6}"; fi
+  if [ -n "$GATE6" ]; then net+=",gw6=${GATE6}"; fi
   if [ -n "$VLAN" ]; then net+=",tag=${VLAN}"; fi
+  if [ -n "$MTU" ]; then net+=",mtu=${MTU}"; fi
+  if [ -n "$MAC" ]; then net+=",hwaddr=${MAC}"; fi
   local tags="gfl"
   if [ -n "$var_tags" ]; then tags+=";${var_tags}"; fi
 
   local -a opts=(
-    -hostname "$HN" -cores "$CORE_COUNT" -memory "$RAM_SIZE" -swap 512
+    -hostname "$HN" -cores "$CORE_COUNT" -memory "$RAM_SIZE" -swap "$SWAP_SIZE"
     -rootfs "${CONTAINER_STORAGE}:${DISK_SIZE}" -net0 "$net"
-    -features "$features" -unprivileged "$CT_TYPE" -onboot 1 -tags "$tags" -timezone host
+    -features "$features" -unprivileged "$CT_TYPE" -onboot "$ONBOOT" -tags "$tags" -timezone host
   )
   if [ -n "$PW" ]; then opts+=(-password "$PW"); fi
+  if [ -n "$NS" ]; then opts+=(-nameserver "$NS"); fi
+  if [ -n "$SD" ]; then opts+=(-searchdomain "$SD"); fi
 
   msg_info "Creating container ${CT_ID}"
   pct create "$CT_ID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" "${opts[@]}" >>"$GFL_LOG" 2>&1
