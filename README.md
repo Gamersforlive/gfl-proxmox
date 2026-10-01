@@ -5,6 +5,8 @@ settings, and get a small unprivileged container with the app installed, running
 
 Website with every script and the full docs: **https://gamersforlive.github.io/gfl-proxmox**
 
+Questions, problems or app requests: **[join the GamersForLive Discord](https://discord.gamersforlive.com)**
+
 ## Quick start
 
 Open your Proxmox node's **Shell** and, on a new host, run the post-install setup first:
@@ -59,6 +61,11 @@ frontend/  the website; the catalog is frontend/data/scripts.json
 
 The website deploys to GitHub Pages from `frontend/` on every push to `main`
 (Settings → Pages → Source: GitHub Actions).
+
+## Community
+
+Get help, share your setup and suggest new apps on the [GamersForLive Discord](https://discord.gamersforlive.com).
+Bugs and pull requests are welcome on GitHub.
 
 Inspired by the [community-scripts ProxmoxVE](https://github.com/community-scripts/ProxmoxVE) project.
 Not affiliated with Proxmox Server Solutions GmbH. MIT licensed.

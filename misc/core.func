@@ -6,6 +6,7 @@
 #   GFL_RAW=file:///root/gfl-proxmox bash ct/jellyfin.sh
 GFL_RAW="${GFL_RAW:-https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main}"
 GFL_SITE="${GFL_SITE:-https://gamersforlive.github.io/gfl-proxmox}"
+GFL_DISCORD="https://discord.gamersforlive.com"
 export GFL_RAW GFL_SITE
 
 color() {
@@ -80,6 +81,7 @@ error_handler() {
     tail -n 20 "$GFL_LOG" | sed 's/^/     /'
   fi
   echo -e "${INFO} Help: ${BL}${GFL_SITE}/#troubleshooting${CL}"
+  echo -e "${INFO} Still stuck? Ask on Discord: ${BL}${GFL_DISCORD}${CL}"
   exit "$exit_code"
 }
 catch_errors() {

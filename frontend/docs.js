@@ -223,7 +223,10 @@ VERBOSE=yes bash -c "$(curl -fsSL ${raw}/ct/jellyfin.sh)"</code></pre>
 <p>The container was not made by these scripts, or the file was removed. Recreate it with:</p>
 <pre><code>printf '#!/usr/bin/env bash\\nbash -c "$(curl -fsSL ${raw}/ct/APP.sh)"\\n' &gt; /usr/bin/update
 chmod +x /usr/bin/update</code></pre>
-<p>Replace <code>APP</code> with the app's short name, as in its script URL.</p>`
+<p>Replace <code>APP</code> with the app's short name, as in its script URL.</p>
+
+<h2>Still stuck?</h2>
+<p>Ask in the <a href="https://discord.gamersforlive.com" target="_blank" rel="noopener">GamersForLive Discord</a>. Paste the error and the last lines of <code>/var/log/gfl-install.log</code>, and say which script you ran.</p>`
     },
     {
       id: "security", group: "Help", title: "Security",
@@ -345,6 +348,8 @@ GFL_RAW=file:///root/gfl-proxmox bash /root/gfl-proxmox/ct/myapp.sh</code></pre>
 <p>Stop the container and delete it: <b>More &gt; Remove</b> in the web UI, or <code>pct destroy &lt;ID&gt; --purge</code>. Bind-mounted host folders are not deleted.</p>
 <h3>Can I run several apps in one container?</h3>
 <p>You can, but one app per container keeps updates, backups and resource limits simple. Containers cost very little.</p>
+<h3>Where can I get help or suggest an app?</h3>
+<p>In the <a href="https://discord.gamersforlive.com" target="_blank" rel="noopener">GamersForLive Discord</a>, or by opening an issue on GitHub.</p>
 <h3>Is this the community-scripts project?</h3>
 <p>No. GFL Proxmox Scripts is the GamersForLive collection, inspired by the community-scripts ProxmoxVE project and written from scratch, with gaming servers and the GFL media stack in mind.</p>`
     }

@@ -69,6 +69,8 @@ code, pre, kbd { font-family: var(--mono); }
 }
 .nav a:hover { color: var(--text); background: var(--panel); }
 .nav a.active { color: var(--text); background: var(--panel2); box-shadow: inset 0 -2px 0 var(--purple); }
+.nav a.discord { color: #c7cbff; }
+.nav a.discord:hover { background: rgba(88, 101, 242, 0.2); color: #fff; }
 .search { position: relative; margin-left: auto; flex: 0 1 300px; min-width: 0; }
 .search input {
   width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--line);

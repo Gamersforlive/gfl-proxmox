@@ -154,6 +154,7 @@
             <a class="btn" href="${esc(s.docs)}" target="_blank" rel="noopener">Official docs ↗</a>
             <a class="btn" href="${esc(sourceUrl(scriptPath(s)))}" target="_blank" rel="noopener">Script source ↗</a>
             ${s.type === "ct" ? `<a class="btn" href="${esc(sourceUrl(`install/${s.slug}-install.sh`))}" target="_blank" rel="noopener">Installer source ↗</a>` : ""}
+            <a class="btn" href="https://discord.gamersforlive.com" target="_blank" rel="noopener">Get help on Discord ↗</a>
           </div>
         </article>
       </div>`;
