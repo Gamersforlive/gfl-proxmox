@@ -41,9 +41,30 @@
     return `<div class="specs"><span>${r.cpu} vCPU</span><span>${ram(r.ram)}</span><span>${r.disk} GB</span>${port}</div>`;
   }
 
+  // ---------- favourites, "new", filters ----------
+  // Favourites live in this browser only (localStorage); everything works without them.
+  state.fav = new Set();
+  try { state.fav = new Set(JSON.parse(localStorage.getItem("gfl-favourites") || "[]")); } catch { /* storage blocked */ }
+  const saveFav = () => { try { localStorage.setItem("gfl-favourites", JSON.stringify([...state.fav])); } catch { /* storage blocked */ } };
+  state.filters = new Set();
+  const FILTERS = [
+    ["gpu", "GPU ready", (s) => (s.flags || []).includes("gpu")],
+    ["docker", "Uses Docker", (s) => (s.flags || []).includes("docker")],
+    ["native", "No Docker", (s) => s.type === "ct" && !(s.flags || []).includes("docker")],
+    ["light", "Light (≤ 1 GB RAM)", (s) => s.resources && s.resources.ram && s.resources.ram <= 1024]
+  ];
+  // "New" = added after the first release and within the last two weeks.
+  const firstDate = () => state.data.scripts.reduce((m, s) => (s.added && s.added < m ? s.added : m), "9999");
+  const isNew = (s) => s.added && s.added > firstDate() && Date.now() - Date.parse(s.added) < 14 * 864e5;
+  const recent = () => state.data.scripts.filter((s) => s.added && s.added > firstDate()).sort((a, b) => (b.added > a.added ? 1 : b.added < a.added ? -1 : 0));
+  const PSEUDO = { fav: "Favourites", new: "Recently added" };
+
   // ---------- catalog ----------
   function matches(s) {
-    if (state.cat !== "all" && s.category !== state.cat) return false;
+    if (state.cat === "fav") { if (!state.fav.has(s.slug)) return false; }
+    else if (state.cat === "new") { if (!(s.added && s.added > firstDate())) return false; }
+    else if (state.cat !== "all" && s.category !== state.cat) return false;
+    for (const [id, , test] of FILTERS) if (state.filters.has(id) && !test(s)) return false;
     if (!state.q) return true;
     const hay = [s.name, s.slug, s.summary, catName(s.category), TYPE_LABEL[s.type], ...(s.flags || [])].join(" ").toLowerCase();
     return state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
@@ -52,9 +73,9 @@
   function renderHome() {
     const { scripts, categories } = state.data;
     const count = (t) => scripts.filter((s) => s.type === t).length;
-    const cats = [{ id: "all", name: "All scripts" }, ...categories];
-    const n = (id) => (id === "all" ? scripts.length : scripts.filter((s) => s.category === id).length);
-    const catBtn = (c, cls) => `<button type="button" class="${cls}${state.cat === c.id ? " on" : ""}" data-cat="${c.id}">${esc(c.name)}${cls ? "" : `<span class="count">${n(c.id)}</span>`}</button>`;
+    const cats = [{ id: "all", name: "All scripts" }, { id: "fav", name: PSEUDO.fav }, { id: "new", name: PSEUDO.new }, ...categories];
+    const n = (id) => (id === "all" ? scripts.length : id === "fav" ? state.fav.size : id === "new" ? recent().length : scripts.filter((s) => s.category === id).length);
+    const catBtn = (c, cls) => `<button type="button" class="${cls}${state.cat === c.id ? " on" : ""}" data-cat="${c.id}">${esc(c.name)}${cls ? "" : `<span class="count" data-count="${c.id}">${n(c.id)}</span>`}</button>`;
 
     app.innerHTML = `
       <section class="hero">
@@ -64,7 +85,7 @@
           <p>Paste a command into the Proxmox shell, press Enter, pick default settings. You get a small, updatable container with the app installed and running, and the address to open it.</p>
           ${cmdBox(command(scripts.find((s) => s.slug === "post-pve-install")))}
           <p class="hint">New host? Start with the post-install setup above, then read <a href="#getting-started">Getting started</a>.</p>
-          <div class="hero-stats"><span><b>${count("ct")}</b>apps</span><span><b>${count("vm")}</b>virtual machines</span><span><b>${count("tool")}</b>host tools</span></div>
+          <div class="hero-stats"><span><b>${count("ct")}</b>apps</span><span><b>${count("bundle")}</b>${count("bundle") === 1 ? "bundle" : "bundles"}</span><span><b>${count("vm")}</b>virtual machines</span><span><b>${count("tool")}</b>host tools</span></div>
         </div>
         <div class="term" aria-label="Example: installing Jellyfin">
           <div class="term-bar"><i></i><i></i><i></i><span>pve · Shell · example</span></div>
@@ -102,10 +123,30 @@
 
   function catalogResults() {
     const { scripts } = state.data;
-    const list = scripts.filter(matches);
-    const heading = state.q ? `Results for “${esc(state.q)}”` : state.cat === "all" ? "All scripts" : esc(catName(state.cat));
+    let list = scripts.filter(matches);
+    if (state.cat === "new") list = recent().filter(matches);
+    const heading = state.q ? `Results for “${esc(state.q)}”` : state.cat === "all" ? "All scripts" : esc(PSEUDO[state.cat] || catName(state.cat));
+    const filters = `<div class="filters" role="group" aria-label="Filters">${FILTERS.map(([id, label]) =>
+      `<button type="button" class="filter${state.filters.has(id) ? " on" : ""}" data-filter="${id}" aria-pressed="${state.filters.has(id)}">${esc(label)}</button>`).join("")}</div>`;
+    let empty = `Nothing matches. Try fewer filters or a shorter word, or <button class="chip" type="button" data-clear>show everything</button>`;
+    if (state.cat === "fav" && !state.fav.size) empty = "No favourites yet. Click the ☆ on any app to keep it here (saved in this browser).";
     return `<div class="section-head"><h2>${heading}</h2><p>${list.length} of ${scripts.length} scripts</p></div>
-      ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">Nothing matches “${esc(state.q)}”. Try a shorter word, or <button class="chip" type="button" data-clear>show everything</button></div>`}`;
+      ${filters}
+      ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">${empty}</div>`}`;
+  }
+
+  const star = (s, label = false) =>
+    `<button type="button" class="fav${label ? " fav-label" : ""}" data-fav="${s.slug}" aria-pressed="${state.fav.has(s.slug)}" title="${state.fav.has(s.slug) ? "Remove from favourites" : "Add to favourites"}">` +
+    `<span aria-hidden="true">${state.fav.has(s.slug) ? "★" : "☆"}</span>${label ? `<span>${state.fav.has(s.slug) ? "Favourite" : "Add to favourites"}</span>` : `<span class="sr-only">Favourite ${esc(s.name)}</span>`}</button>`;
+
+  function toggleFav(slug) {
+    if (state.fav.has(slug)) state.fav.delete(slug); else state.fav.add(slug);
+    saveFav();
+    const s = state.data.scripts.find((x) => x.slug === slug);
+    app.querySelectorAll(`[data-fav="${slug}"]`).forEach((b) => { b.outerHTML = star(s, b.classList.contains("fav-label")); });
+    const c = $('[data-count="fav"]', app);
+    if (c) c.textContent = state.fav.size;
+    if (state.cat === "fav") updateCatalog();
   }
 
   // Filtering (a category or a search) only swaps the cards. The hero and the sidebar stay
@@ -126,12 +167,13 @@
     window.scrollTo({ top: y, behavior: "instant" });
   }
 
+  // The star sits next to the link, not inside it (a button inside a link is invalid HTML).
   function card(s) {
-    return `<a class="card" href="#${s.slug}">
-      <div class="card-top">${icon(s)}<div><h3>${esc(s.name)}</h3><div class="cat">${esc(catName(s.category))}</div></div>${typeTag(s)}</div>
+    return `<div class="card-wrap"><a class="card" href="#${s.slug}">
+      <div class="card-top">${icon(s)}<div><h3>${esc(s.name)}${isNew(s) ? ' <span class="new">New</span>' : ""}</h3><div class="cat">${esc(catName(s.category))}</div></div>${typeTag(s)}</div>
       <p>${esc(s.summary)}</p>
       ${specs(s)}
-    </a>`;
+    </a>${star(s)}</div>`;
   }
 
   // ---------- one script ----------
@@ -170,7 +212,7 @@
         <article class="detail">
           <header class="detail-head">${icon(s)}<div>
             <h1>${esc(s.name)}</h1>
-            <div class="row">${typeTag(s)}<span class="tag tag-flag">${esc(catName(s.category))}</span>${flags}</div>
+            <div class="row">${typeTag(s)}<span class="tag tag-flag">${esc(catName(s.category))}</span>${flags}${star(s, true)}</div>
           </div></header>
           <p class="lede">${esc(s.description)}</p>
 
@@ -186,6 +228,7 @@
             <a class="btn" href="${esc(sourceUrl(scriptPath(s)))}" target="_blank" rel="noopener">Script source ↗</a>
             ${s.type === "ct" ? `<a class="btn" href="${esc(sourceUrl(`install/${s.slug}-install.sh`))}" target="_blank" rel="noopener">Installer source ↗</a>` : ""}
             <a class="btn" href="https://discord.gamersforlive.com" target="_blank" rel="noopener">Get help on Discord ↗</a>
+            <button type="button" class="btn" data-print>Print summary</button>
           </div>
           ${scriptPager(s)}
         </article>
@@ -374,6 +417,15 @@
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".copy");
     if (btn) return btn.disabled ? undefined : copy(btn);
+    const fav = e.target.closest("[data-fav]");
+    if (fav) { e.preventDefault(); return toggleFav(fav.dataset.fav); }
+    const filter = e.target.closest("[data-filter]");
+    if (filter) {
+      const id = filter.dataset.filter;
+      if (state.filters.has(id)) state.filters.delete(id); else state.filters.add(id);
+      return updateCatalog();
+    }
+    if (e.target.closest("[data-print]")) return window.print();
     const mode = e.target.closest("[data-mode]");
     if (mode) return setMode(mode.dataset.mode);
     if (e.target.closest("[data-reset]")) {
@@ -385,7 +437,7 @@
     }
     const cat = e.target.closest("[data-cat]");
     if (cat) { state.cat = cat.dataset.cat; updateCatalog(); return; }
-    if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; updateCatalog(); }
+    if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; state.filters.clear(); $("#q").value = ""; updateCatalog(); }
   });
 
   // A logo that fails to load is swapped for the app's initials.

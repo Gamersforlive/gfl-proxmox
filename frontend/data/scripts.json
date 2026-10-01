@@ -18,7 +18,7 @@
   ],
   "scripts": [
     {
-      "slug": "media-stack", "icon": "icons/jellyfin.svg", "name": "Media bundle", "type": "bundle", "category": "bundles", "script": "bundles/media-stack.sh",
+      "slug": "media-stack", "icon": "icons/jellyfin.svg", "name": "Media bundle", "type": "bundle", "category": "bundles", "script": "bundles/media-stack.sh", "added": "2026-10-01",
       "summary": "A complete movies & TV setup in one go, every app already connected.",
       "website": "https://wiki.servarr.com", "docs": "https://trash-guides.info/Hardlinks/How-to-setup-for/Proxmox/",
       "description": "Creates qBittorrent, Prowlarr, FlareSolverr, Radarr, Sonarr, Jellyfin and Seerr (Lidarr optional), each in its own container, on one shared media folder. Then it connects them through their APIs: one login everywhere, qBittorrent as the download client, library folders, Prowlarr syncing indexers to Radarr and Sonarr through FlareSolverr, the Jellyfin wizard and libraries, and Seerr signed in with Jellyfin and sending requests to Radarr and Sonarr. The only thing left for you is adding indexers in Prowlarr.",
@@ -27,7 +27,7 @@
       "notes": ["Downloads and the library share one folder, so finished downloads are hardlinked into the library instantly instead of copied.", "Point the media folder at a big disk, or at a NAS share mounted with the 'Mount a NAS share into containers' tool first.", "Run the bundle again any time: it reuses the containers it finds and only adds missing connections.", "Next step: open Prowlarr and add your indexers. They appear in Radarr and Sonarr automatically."]
     },
     {
-      "slug": "docker", "icon": "icons/docker.svg", "name": "Docker", "type": "ct", "category": "docker",
+      "slug": "docker", "icon": "icons/docker.svg", "name": "Docker", "type": "ct", "category": "docker", "added": "2026-09-30",
       "summary": "Docker Engine and the compose plugin in a lightweight container.",
       "description": "A clean Debian container with Docker Engine and the docker compose plugin from Docker's own repository. Log rotation is set up so container logs never fill the disk. Use it for any app that ships as a compose file.",
       "website": "https://docs.docker.com/engine/", "docs": "https://docs.docker.com/compose/",
@@ -36,7 +36,7 @@
       "notes": ["Put each stack in its own folder, for example /opt/myapp/compose.yaml, then run docker compose up -d in that folder."]
     },
     {
-      "slug": "portainer", "icon": "icons/portainer.svg", "name": "Portainer", "type": "ct", "category": "docker",
+      "slug": "portainer", "icon": "icons/portainer.svg", "name": "Portainer", "type": "ct", "category": "docker", "added": "2026-09-30",
       "summary": "Manage Docker containers, stacks and images from your browser.",
       "description": "Docker plus Portainer CE (the long-term-support release). Portainer gives you a web dashboard for containers, images, volumes, networks and compose stacks.",
       "website": "https://www.portainer.io", "docs": "https://docs.portainer.io",
@@ -48,7 +48,7 @@
       "notes": ["You have 5 minutes after install to create the admin account. If you miss it, run docker restart portainer inside the container.", "Your browser warns about the self-signed certificate. That is expected; continue to the site."]
     },
     {
-      "slug": "dockge", "icon": "icons/dockge.svg", "name": "Dockge", "type": "ct", "category": "docker",
+      "slug": "dockge", "icon": "icons/dockge.svg", "name": "Dockge", "type": "ct", "category": "docker", "added": "2026-09-30",
       "summary": "A friendly compose-file manager from the maker of Uptime Kuma.",
       "description": "Docker plus Dockge. Paste or write a compose file, press deploy, and watch the logs live. Stacks are stored as plain files in /opt/stacks, so you can still manage them by hand.",
       "website": "https://github.com/louislam/dockge", "docs": "https://github.com/louislam/dockge#readme",
@@ -58,7 +58,7 @@
       "login": "Create your login on first visit."
     },
     {
-      "slug": "homepage", "icon": "icons/homepage.png", "name": "Homepage", "type": "ct", "category": "docker",
+      "slug": "homepage", "icon": "icons/homepage.png", "name": "Homepage", "type": "ct", "category": "docker", "added": "2026-10-01",
       "summary": "A fast, good-looking start page for all your apps.",
       "description": "Homepage in Docker: a dashboard with links, live status and widgets for your apps, configured with simple YAML files.",
       "website": "https://gethomepage.dev", "docs": "https://gethomepage.dev/configs/",
@@ -68,7 +68,7 @@
       "notes": ["Edit services.yaml and the other files in /opt/homepage/config. The page picks up changes by itself."]
     },
     {
-      "slug": "jellyfin", "icon": "icons/jellyfin.svg", "name": "Jellyfin", "type": "ct", "category": "media",
+      "slug": "jellyfin", "icon": "icons/jellyfin.svg", "name": "Jellyfin", "type": "ct", "category": "media", "added": "2026-09-30",
       "summary": "Free media server for your movies, shows and music.",
       "description": "Jellyfin from the official Jellyfin repository, with hardware transcoding ready: if your host has an Intel or AMD GPU, it is passed into the container and the VA-API drivers are installed.",
       "website": "https://jellyfin.org", "docs": "https://jellyfin.org/docs/",
@@ -79,7 +79,7 @@
       "notes": ["Media folders are ready at /data/media/movies and /data/media/tv. Mount your storage there; see Storage and shared folders in the docs.", "Turn on hardware transcoding under Dashboard > Playback > Transcoding: pick VAAPI and device /dev/dri/renderD128."]
     },
     {
-      "slug": "radarr", "icon": "icons/radarr.svg", "name": "Radarr", "type": "ct", "category": "media",
+      "slug": "radarr", "icon": "icons/radarr.svg", "name": "Radarr", "type": "ct", "category": "media", "added": "2026-09-30",
       "summary": "Finds, downloads and organises movies automatically.",
       "description": "Radarr from the official release, running as its own user in the shared media group so downloads and your library can use the same folders.",
       "website": "https://radarr.video", "docs": "https://wiki.servarr.com/radarr",
@@ -89,7 +89,7 @@
       "notes": ["Radarr updates itself from Settings > General > Updates.", "Use the same /data mount in Radarr, Sonarr and qBittorrent so moves are instant hardlinks, not copies."]
     },
     {
-      "slug": "sonarr", "icon": "icons/sonarr.svg", "name": "Sonarr", "type": "ct", "category": "media",
+      "slug": "sonarr", "icon": "icons/sonarr.svg", "name": "Sonarr", "type": "ct", "category": "media", "added": "2026-09-30",
       "summary": "Finds, downloads and organises TV shows automatically.",
       "description": "Sonarr v4 from the official release, running as its own user in the shared media group.",
       "website": "https://sonarr.tv", "docs": "https://wiki.servarr.com/sonarr",
@@ -99,7 +99,7 @@
       "notes": ["Sonarr updates itself from Settings > General > Updates."]
     },
     {
-      "slug": "prowlarr", "icon": "icons/prowlarr.svg", "name": "Prowlarr", "type": "ct", "category": "media",
+      "slug": "prowlarr", "icon": "icons/prowlarr.svg", "name": "Prowlarr", "type": "ct", "category": "media", "added": "2026-09-30",
       "summary": "One place to manage indexers for Radarr and Sonarr.",
       "description": "Prowlarr from the official release. Add your indexers once and Prowlarr pushes them to Radarr and Sonarr.",
       "website": "https://prowlarr.com", "docs": "https://wiki.servarr.com/prowlarr",
@@ -108,7 +108,7 @@
       "notes": ["Connect Radarr and Sonarr under Settings > Apps using their API keys (Settings > General in each app)."]
     },
     {
-      "slug": "qbittorrent", "icon": "icons/qbittorrent.svg", "name": "qBittorrent", "type": "ct", "category": "media",
+      "slug": "qbittorrent", "icon": "icons/qbittorrent.svg", "name": "qBittorrent", "type": "ct", "category": "media", "added": "2026-09-30",
       "summary": "Torrent client with a web UI, set up for the *arr apps.",
       "description": "qbittorrent-nox (web UI only). Downloads go to /data/downloads, a random admin password is generated for you, and the process runs in the shared media group.",
       "website": "https://www.qbittorrent.org", "docs": "https://github.com/qbittorrent/qBittorrent/wiki",
@@ -118,7 +118,7 @@
       "notes": ["Read the password from the Proxmox host with: pct exec <ID> -- cat /root/qbittorrent.creds"]
     },
     {
-      "slug": "plex", "icon": "icons/plex.svg", "name": "Plex", "type": "ct", "category": "media",
+      "slug": "plex", "icon": "icons/plex.svg", "name": "Plex", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "The popular media server, with hardware transcoding ready.",
       "description": "Plex Media Server from Plex's own repository. If your host has an Intel or AMD GPU it is passed in and the VA-API drivers are installed, ready for hardware transcoding (a Plex Pass feature).",
       "website": "https://www.plex.tv", "docs": "https://support.plex.tv/articles/categories/your-media/",
@@ -131,7 +131,7 @@
       "notes": ["Open http://<container-ip>:32400/web from a device on the same network to claim the server.", "Media folders are ready at /data/media/movies and /data/media/tv. Mount your storage there; see Storage and shared folders in the docs."]
     },
     {
-      "slug": "lidarr", "icon": "icons/lidarr.svg", "name": "Lidarr", "type": "ct", "category": "media",
+      "slug": "lidarr", "icon": "icons/lidarr.svg", "name": "Lidarr", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Finds, downloads and organises music automatically.",
       "description": "Lidarr from the official release, running as its own user in the shared media group, like Radarr and Sonarr.",
       "website": "https://lidarr.audio", "docs": "https://wiki.servarr.com/lidarr",
@@ -141,7 +141,7 @@
       "notes": ["Lidarr updates itself from Settings > General > Updates."]
     },
     {
-      "slug": "seerr", "icon": "icons/seerr.svg", "name": "Seerr", "type": "ct", "category": "media",
+      "slug": "seerr", "icon": "icons/seerr.svg", "name": "Seerr", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Let friends request movies and shows for your media server.",
       "description": "Seerr, the successor to Jellyseerr and Overseerr, in Docker. People sign in with their Jellyfin, Plex or Emby account and request titles; Seerr sends them to Radarr and Sonarr.",
       "website": "https://github.com/seerr-team/seerr", "docs": "https://docs.seerr.dev",
@@ -151,7 +151,7 @@
       "login": "Sign in with your Jellyfin, Plex or Emby admin account in the setup wizard."
     },
     {
-      "slug": "flaresolverr", "icon": "icons/flaresolverr.svg", "name": "FlareSolverr", "type": "ct", "category": "media",
+      "slug": "flaresolverr", "icon": "icons/flaresolverr.svg", "name": "FlareSolverr", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Gets Prowlarr past Cloudflare checks on some indexers.",
       "description": "FlareSolverr in Docker. Prowlarr sends requests for protected indexers through it, and it solves the Cloudflare challenge in a headless browser.",
       "website": "https://github.com/FlareSolverr/FlareSolverr", "docs": "https://github.com/FlareSolverr/FlareSolverr#readme",
@@ -161,7 +161,7 @@
       "notes": ["In Prowlarr, open Settings > Indexers, add FlareSolverr with http://<container-ip>:8191 and give it a tag. Add the same tag to indexers that need it."]
     },
     {
-      "slug": "navidrome", "icon": "icons/navidrome.svg", "name": "Navidrome", "type": "ct", "category": "media",
+      "slug": "navidrome", "icon": "icons/navidrome.svg", "name": "Navidrome", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Your own music streaming server, like a private Spotify.",
       "description": "Navidrome from its official release package. Streams your music collection to the web and to any Subsonic app on your phone.",
       "website": "https://www.navidrome.org", "docs": "https://www.navidrome.org/docs/",
@@ -171,7 +171,7 @@
       "notes": ["Put your music in /data/media/music, or mount it there; see Storage and shared folders in the docs."]
     },
     {
-      "slug": "audiobookshelf", "icon": "icons/audiobookshelf.svg", "name": "Audiobookshelf", "type": "ct", "category": "media",
+      "slug": "audiobookshelf", "icon": "icons/audiobookshelf.svg", "name": "Audiobookshelf", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Server for audiobooks and podcasts, with phone apps.",
       "description": "Audiobookshelf from its official repository. Streams audiobooks and podcasts, remembers where you stopped, and has apps for Android and iOS.",
       "website": "https://www.audiobookshelf.org", "docs": "https://www.audiobookshelf.org/docs",
@@ -181,7 +181,7 @@
       "notes": ["Library folders are ready at /data/media/audiobooks and /data/media/podcasts."]
     },
     {
-      "slug": "immich", "icon": "icons/immich.svg", "name": "Immich", "type": "ct", "category": "media",
+      "slug": "immich", "icon": "icons/immich.svg", "name": "Immich", "type": "ct", "category": "media", "added": "2026-10-01",
       "summary": "Self-hosted Google Photos: backup, faces, search and sharing.",
       "description": "Immich with its own official compose file and settings from the newest release. Phones back up automatically, and machine learning finds faces and lets you search your photos by what is in them.",
       "website": "https://immich.app", "docs": "https://immich.app/docs/overview/introduction",
@@ -192,7 +192,7 @@
       "notes": ["Photos are stored in /data/immich/library. Mount large storage there before you start uploading.", "The first start downloads about 3 GB of images."]
     },
     {
-      "slug": "adguard", "icon": "icons/adguard-home.svg", "name": "AdGuard Home", "type": "ct", "category": "network",
+      "slug": "adguard", "icon": "icons/adguard-home.svg", "name": "AdGuard Home", "type": "ct", "category": "network", "added": "2026-09-30",
       "summary": "Blocks ads and trackers for every device on your network.",
       "description": "AdGuard Home installed with the official installer as a system service. It answers DNS for your whole network and filters ads, trackers and malware domains.",
       "website": "https://adguard.com/adguard-home/overview.html", "docs": "https://github.com/AdguardTeam/AdGuardHome/wiki",
@@ -202,7 +202,7 @@
       "notes": ["Give this container a static IP (Advanced settings) before you point your router's DNS at it.", "After the wizard the web UI moves to port 80 unless you choose another port."]
     },
     {
-      "slug": "nginx-proxy-manager", "icon": "icons/nginx-proxy-manager.svg", "name": "Nginx Proxy Manager", "type": "ct", "category": "network",
+      "slug": "nginx-proxy-manager", "icon": "icons/nginx-proxy-manager.svg", "name": "Nginx Proxy Manager", "type": "ct", "category": "network", "added": "2026-09-30",
       "summary": "Reverse proxy with free SSL certificates and a simple web UI.",
       "description": "Nginx Proxy Manager in Docker. Point your domains at it and it routes each one to the right app, with Let's Encrypt certificates renewed automatically.",
       "website": "https://nginxproxymanager.com", "docs": "https://nginxproxymanager.com/guide/",
@@ -213,7 +213,7 @@
       "notes": ["Forward ports 80 and 443 on your router to this container's IP."]
     },
     {
-      "slug": "caddy", "icon": "icons/caddy.svg", "name": "Caddy", "type": "ct", "category": "network",
+      "slug": "caddy", "icon": "icons/caddy.svg", "name": "Caddy", "type": "ct", "category": "network", "added": "2026-09-30",
       "summary": "Web server and reverse proxy with automatic HTTPS.",
       "description": "Caddy from the official repository. Write a two-line Caddyfile per site and Caddy gets and renews the certificates itself.",
       "website": "https://caddyserver.com", "docs": "https://caddyserver.com/docs/",
@@ -222,7 +222,7 @@
       "notes": ["Edit /etc/caddy/Caddyfile, then run systemctl reload caddy."]
     },
     {
-      "slug": "cloudflared", "icon": "icons/cloudflared.svg", "name": "Cloudflared", "type": "ct", "category": "network",
+      "slug": "cloudflared", "icon": "icons/cloudflared.svg", "name": "Cloudflared", "type": "ct", "category": "network", "added": "2026-09-30",
       "summary": "Publish apps through a Cloudflare Tunnel without opening ports.",
       "description": "The cloudflared connector from Cloudflare's repository. Create a tunnel in the Cloudflare dashboard and paste its token to connect.",
       "website": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/", "docs": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/",
@@ -230,7 +230,7 @@
       "notes": ["Inside the container run: cloudflared service install <your tunnel token>"]
     },
     {
-      "slug": "wg-easy", "icon": "icons/wireguard.svg", "name": "WireGuard (wg-easy)", "type": "ct", "category": "security",
+      "slug": "wg-easy", "icon": "icons/wireguard.svg", "name": "WireGuard (wg-easy)", "type": "ct", "category": "security", "added": "2026-09-30",
       "summary": "Your own VPN with a web UI for adding phones and laptops.",
       "description": "wg-easy v15 in Docker: a WireGuard server with a web page where you add clients and scan a QR code on your phone. The script loads the WireGuard kernel module on the host.",
       "website": "https://github.com/wg-easy/wg-easy", "docs": "https://wg-easy.github.io/wg-easy/latest/",
@@ -241,7 +241,7 @@
       "notes": ["Forward UDP port 51820 on your router to this container.", "The web UI runs over plain HTTP on your LAN. Do not expose port 51821 to the internet."]
     },
     {
-      "slug": "vaultwarden", "icon": "icons/vaultwarden-light.svg", "name": "Vaultwarden", "type": "ct", "category": "security",
+      "slug": "vaultwarden", "icon": "icons/vaultwarden-light.svg", "name": "Vaultwarden", "type": "ct", "category": "security", "added": "2026-09-30",
       "summary": "Lightweight Bitwarden-compatible password manager.",
       "description": "Vaultwarden in Docker. Works with the official Bitwarden apps and browser extensions.",
       "website": "https://github.com/dani-garcia/vaultwarden", "docs": "https://github.com/dani-garcia/vaultwarden/wiki",
@@ -252,7 +252,7 @@
       "notes": ["Browsers only allow the web vault over HTTPS. Put it behind Nginx Proxy Manager, Caddy or a Cloudflare Tunnel.", "After creating your accounts, set SIGNUPS_ALLOWED=false in /opt/vaultwarden/compose.yaml and run docker compose up -d."]
     },
     {
-      "slug": "syncthing", "icon": "icons/syncthing.svg", "name": "Syncthing", "type": "ct", "category": "files",
+      "slug": "syncthing", "icon": "icons/syncthing.svg", "name": "Syncthing", "type": "ct", "category": "files", "added": "2026-10-01",
       "summary": "Keep folders in sync between your PCs, phone and server.",
       "description": "Syncthing from its official repository, running as its own user with the web UI open to your network. Files go directly between your devices, with no cloud in between.",
       "website": "https://syncthing.net", "docs": "https://docs.syncthing.net",
@@ -262,7 +262,7 @@
       "notes": ["Synced folders go in /data/sync. Mount larger storage there if you need it."]
     },
     {
-      "slug": "gitea", "icon": "icons/gitea.svg", "name": "Gitea", "type": "ct", "category": "files",
+      "slug": "gitea", "icon": "icons/gitea.svg", "name": "Gitea", "type": "ct", "category": "files", "added": "2026-10-01",
       "summary": "Your own GitHub: Git hosting with issues and pull requests.",
       "description": "Gitea installed from its official binary, following the Gitea docs. Lightweight Git hosting with a web UI, issues, pull requests, packages and Actions.",
       "website": "https://about.gitea.com", "docs": "https://docs.gitea.com",
@@ -272,7 +272,7 @@
       "notes": ["On the installer page, pick SQLite as the database unless you already run MariaDB or PostgreSQL."]
     },
     {
-      "slug": "paperless-ngx", "icon": "icons/paperless-ngx.svg", "name": "Paperless-ngx", "type": "ct", "category": "files",
+      "slug": "paperless-ngx", "icon": "icons/paperless-ngx.svg", "name": "Paperless-ngx", "type": "ct", "category": "files", "added": "2026-10-01",
       "summary": "Scan, OCR and search all your paper documents.",
       "description": "Paperless-ngx in Docker with Redis. It reads the text in every scan or PDF, tags and files it, and makes everything searchable. An admin account is created for you.",
       "website": "https://docs.paperless-ngx.com", "docs": "https://docs.paperless-ngx.com/usage/",
@@ -283,7 +283,7 @@
       "notes": ["Drop files into /opt/paperless-ngx/consume and Paperless imports them."]
     },
     {
-      "slug": "n8n", "icon": "icons/n8n.svg", "name": "n8n", "type": "ct", "category": "files",
+      "slug": "n8n", "icon": "icons/n8n.svg", "name": "n8n", "type": "ct", "category": "files", "added": "2026-10-01",
       "summary": "Automate anything: connect apps and APIs with workflows.",
       "description": "n8n in Docker. Build workflows that connect hundreds of services, from Discord bots to backups and alerts, in a visual editor.",
       "website": "https://n8n.io", "docs": "https://docs.n8n.io",
@@ -294,7 +294,7 @@
       "notes": ["Secure cookies are turned off so login works over plain http on your LAN. Remove N8N_SECURE_COOKIE from /opt/n8n/compose.yaml once n8n is behind HTTPS."]
     },
     {
-      "slug": "uptime-kuma", "icon": "icons/uptime-kuma.svg", "name": "Uptime Kuma", "type": "ct", "category": "monitoring",
+      "slug": "uptime-kuma", "icon": "icons/uptime-kuma.svg", "name": "Uptime Kuma", "type": "ct", "category": "monitoring", "added": "2026-09-30",
       "summary": "Watch your sites and servers and get pinged when one goes down.",
       "description": "Uptime Kuma from source on Node.js 22. Monitors HTTP, TCP, ping, DNS and game servers, and alerts you on Discord, Telegram, email and more.",
       "website": "https://github.com/louislam/uptime-kuma", "docs": "https://github.com/louislam/uptime-kuma/wiki",
@@ -303,7 +303,7 @@
       "login": "Create the admin account on first visit."
     },
     {
-      "slug": "grafana", "icon": "icons/grafana.svg", "name": "Grafana", "type": "ct", "category": "monitoring",
+      "slug": "grafana", "icon": "icons/grafana.svg", "name": "Grafana", "type": "ct", "category": "monitoring", "added": "2026-09-30",
       "summary": "Dashboards and graphs for all your metrics.",
       "description": "Grafana OSS from the official repository. Add a data source (Prometheus, InfluxDB, MariaDB, PostgreSQL and many more) and build dashboards.",
       "website": "https://grafana.com/oss/grafana/", "docs": "https://grafana.com/docs/grafana/latest/",
@@ -312,7 +312,7 @@
       "login": "admin / admin. Grafana makes you change it on first login."
     },
     {
-      "slug": "prometheus", "icon": "icons/prometheus.svg", "name": "Prometheus", "type": "ct", "category": "monitoring",
+      "slug": "prometheus", "icon": "icons/prometheus.svg", "name": "Prometheus", "type": "ct", "category": "monitoring", "added": "2026-10-01",
       "summary": "Collects metrics from your servers and apps over time.",
       "description": "Prometheus and the node exporter from Debian. Pair it with Grafana for dashboards; Proxmox itself can send metrics too.",
       "website": "https://prometheus.io", "docs": "https://prometheus.io/docs/introduction/overview/",
@@ -321,7 +321,7 @@
       "notes": ["Add scrape targets in /etc/prometheus/prometheus.yml, then run systemctl reload prometheus.", "In Grafana, add a Prometheus data source with http://<container-ip>:9090."]
     },
     {
-      "slug": "mosquitto", "icon": "icons/mosquitto.svg", "name": "Mosquitto", "type": "ct", "category": "home",
+      "slug": "mosquitto", "icon": "icons/mosquitto.svg", "name": "Mosquitto", "type": "ct", "category": "home", "added": "2026-10-01",
       "summary": "MQTT broker for Home Assistant, Zigbee2MQTT and sensors.",
       "description": "Eclipse Mosquitto from Debian, listening on port 1883 with login required and a generated password.",
       "website": "https://mosquitto.org", "docs": "https://mosquitto.org/documentation/",
@@ -332,7 +332,7 @@
       "notes": ["Add more users inside the container: mosquitto_passwd /etc/mosquitto/passwd <name>, then systemctl restart mosquitto."]
     },
     {
-      "slug": "node-red", "icon": "icons/node-red.svg", "name": "Node-RED", "type": "ct", "category": "home",
+      "slug": "node-red", "icon": "icons/node-red.svg", "name": "Node-RED", "type": "ct", "category": "home", "added": "2026-10-01",
       "summary": "Wire together devices and services with drag-and-drop flows.",
       "description": "Node-RED on Node.js 22, running as its own user. A favourite for home automation alongside Home Assistant and MQTT.",
       "website": "https://nodered.org", "docs": "https://nodered.org/docs/",
@@ -342,7 +342,7 @@
       "notes": ["Protect the editor before exposing it: set adminAuth in /var/lib/node-red/settings.js, then systemctl restart node-red."]
     },
     {
-      "slug": "ollama", "icon": "icons/ollama-light.svg", "name": "Ollama", "type": "ct", "category": "ai",
+      "slug": "ollama", "icon": "icons/ollama-light.svg", "name": "Ollama", "type": "ct", "category": "ai", "added": "2026-09-30",
       "summary": "Run large language models on your own hardware.",
       "description": "Ollama with its API open to your network on port 11434. If the host has an Intel or AMD GPU it is passed in; NVIDIA needs the extra steps in the GPU passthrough guide.",
       "website": "https://ollama.com", "docs": "https://github.com/ollama/ollama/tree/main/docs",
@@ -352,7 +352,7 @@
       "notes": ["Download a model inside the container: ollama pull llama3.2", "Give it more RAM than the model size. A 7-8B model wants about 8 GB."]
     },
     {
-      "slug": "open-webui", "icon": "icons/open-webui.svg", "name": "Open WebUI", "type": "ct", "category": "ai",
+      "slug": "open-webui", "icon": "icons/open-webui.svg", "name": "Open WebUI", "type": "ct", "category": "ai", "added": "2026-09-30",
       "summary": "A ChatGPT-style chat page for your Ollama models.",
       "description": "Open WebUI in Docker. Connect it to your Ollama container and chat with your models from any browser.",
       "website": "https://openwebui.com", "docs": "https://docs.openwebui.com",
@@ -363,7 +363,7 @@
       "notes": ["Add Ollama under Admin Panel > Settings > Connections: http://<ollama-ip>:11434"]
     },
     {
-      "slug": "minecraft", "icon": "icons/minecraft.svg", "name": "Minecraft (Paper)", "type": "ct", "category": "gaming",
+      "slug": "minecraft", "icon": "icons/minecraft.svg", "name": "Minecraft (Paper)", "type": "ct", "category": "gaming", "added": "2026-09-30",
       "summary": "A fast Paper Minecraft server on the newest stable version.",
       "description": "Paper, the high-performance Minecraft server, on Java 25. The server gets most of the container's memory, runs as a service, and has a console you can open any time.",
       "website": "https://papermc.io", "docs": "https://docs.papermc.io/paper",
@@ -373,7 +373,7 @@
       "notes": ["The script asks you to accept the Minecraft EULA first.", "Open the live console inside the container with mc-console. Leave it with Ctrl+A, then D.", "Switch Minecraft versions: MC_VERSION=26.2 /opt/minecraft/paper-update.sh, then systemctl restart minecraft."]
     },
     {
-      "slug": "pterodactyl-wings", "icon": "icons/pterodactyl.svg", "name": "Pterodactyl Wings", "type": "ct", "category": "gaming",
+      "slug": "pterodactyl-wings", "icon": "icons/pterodactyl.svg", "name": "Pterodactyl Wings", "type": "ct", "category": "gaming", "added": "2026-09-30",
       "summary": "Add this Proxmox host as a game-server node to your Pterodactyl panel.",
       "description": "Docker plus the Wings daemon. Wings waits until you paste the node configuration from your Pterodactyl panel, then runs your game servers in Docker.",
       "website": "https://pterodactyl.io", "docs": "https://pterodactyl.io/wings/1.0/installing.html",
@@ -382,7 +382,7 @@
       "notes": ["In your panel go to Admin > Nodes > your node > Configuration and copy the config.", "Paste it into /etc/pterodactyl/config.yml inside the container, then run systemctl start wings.", "Allocate game ports in the panel and forward them on your router to this container's IP."]
     },
     {
-      "slug": "factorio", "name": "Factorio", "type": "ct", "category": "gaming",
+      "slug": "factorio", "name": "Factorio", "type": "ct", "category": "gaming", "added": "2026-10-01",
       "summary": "A Factorio dedicated server with a fresh world, ready to join.",
       "description": "The official Factorio headless server, which is free to download. A new world is created, and the server runs as a service that loads the latest save on start.",
       "website": "https://factorio.com", "docs": "https://wiki.factorio.com/Multiplayer#Dedicated/Headless_server",
@@ -392,7 +392,7 @@
       "notes": ["Join with the container's IP. Forward UDP port 34197 on your router for friends outside your network.", "Set the server name, password and public listing in /opt/factorio/data/server-settings.json, then systemctl restart factorio."]
     },
     {
-      "slug": "mariadb", "icon": "icons/mariadb.svg", "name": "MariaDB", "type": "ct", "category": "database",
+      "slug": "mariadb", "icon": "icons/mariadb.svg", "name": "MariaDB", "type": "ct", "category": "database", "added": "2026-09-30",
       "summary": "MySQL-compatible database server, reachable from your network.",
       "description": "MariaDB from Debian, listening on all interfaces with an admin user and a random password.",
       "website": "https://mariadb.org", "docs": "https://mariadb.com/kb/en/documentation/",
@@ -402,7 +402,7 @@
       "login": "User admin. The password is in /root/mariadb.creds inside the container."
     },
     {
-      "slug": "postgresql", "icon": "icons/postgresql.svg", "name": "PostgreSQL", "type": "ct", "category": "database",
+      "slug": "postgresql", "icon": "icons/postgresql.svg", "name": "PostgreSQL", "type": "ct", "category": "database", "added": "2026-09-30",
       "summary": "PostgreSQL database server, reachable from your network.",
       "description": "PostgreSQL from Debian, listening on all interfaces with password login. The postgres user gets a random password.",
       "website": "https://www.postgresql.org", "docs": "https://www.postgresql.org/docs/current/",
@@ -412,7 +412,7 @@
       "login": "User postgres. The password is in /root/postgresql.creds inside the container."
     },
     {
-      "slug": "redis", "icon": "icons/redis.svg", "name": "Redis", "type": "ct", "category": "database",
+      "slug": "redis", "icon": "icons/redis.svg", "name": "Redis", "type": "ct", "category": "database", "added": "2026-10-01",
       "summary": "Fast in-memory key-value store, reachable from your network.",
       "description": "Redis from Debian, listening on all interfaces with a generated password.",
       "website": "https://redis.io", "docs": "https://redis.io/docs/latest/",
@@ -422,7 +422,7 @@
       "login": "The password is in /root/redis.creds inside the container."
     },
     {
-      "slug": "haos-vm", "icon": "icons/home-assistant.svg", "name": "Home Assistant OS", "type": "vm", "category": "vm", "script": "vm/haos-vm.sh",
+      "slug": "haos-vm", "icon": "icons/home-assistant.svg", "name": "Home Assistant OS", "type": "vm", "category": "vm", "script": "vm/haos-vm.sh", "added": "2026-09-30",
       "summary": "The full Home Assistant OS as a VM, add-ons included.",
       "description": "Downloads the newest official Home Assistant OS image and creates a UEFI virtual machine from it. Home Assistant OS updates itself and supports add-ons, which the container versions cannot.",
       "website": "https://www.home-assistant.io", "docs": "https://www.home-assistant.io/installation/generic-x86-64",
@@ -432,7 +432,7 @@
       "notes": ["First boot takes a few minutes. Then open http://homeassistant.local:8123 or the VM's IP on port 8123.", "Pass a Zigbee or Z-Wave USB stick through under the VM's Hardware > Add > USB Device."]
     },
     {
-      "slug": "debian-vm", "icon": "icons/debian-linux.svg", "name": "Debian 13 VM", "type": "vm", "category": "vm", "script": "vm/debian-vm.sh",
+      "slug": "debian-vm", "icon": "icons/debian-linux.svg", "name": "Debian 13 VM", "type": "vm", "category": "vm", "script": "vm/debian-vm.sh", "added": "2026-09-30",
       "summary": "A clean Debian 13 virtual machine set up with cloud-init.",
       "description": "Creates a VM from the official Debian 13 cloud image and sets your user, password and SSH keys with cloud-init. Boots in seconds; no installer to click through.",
       "website": "https://www.debian.org", "docs": "https://pve.proxmox.com/wiki/Cloud-Init_Support",
@@ -441,68 +441,68 @@
       "notes": ["Install the guest agent in the VM so Proxmox can show its IP: sudo apt install qemu-guest-agent"]
     },
     {
-      "slug": "post-pve-install", "icon": "icons/proxmox.svg", "name": "Post-install setup", "type": "tool", "category": "tools", "script": "tools/post-pve-install.sh",
+      "slug": "post-pve-install", "icon": "icons/proxmox.svg", "name": "Post-install setup", "type": "tool", "category": "tools", "script": "tools/post-pve-install.sh", "added": "2026-09-30",
       "summary": "Fix the repositories and pop-up on a fresh Proxmox install.",
       "description": "Run this first on a new Proxmox VE 8 or 9 host without a subscription. It asks before every step: disable the enterprise repositories, add the free no-subscription repository, hide the subscription pop-up, turn off high availability on single hosts, update, and reboot.",
       "website": "https://pve.proxmox.com/wiki/Package_Repositories", "docs": "https://pve.proxmox.com/wiki/Package_Repositories",
       "notes": ["Safe to run again. Answer No to any step you want to skip."]
     },
     {
-      "slug": "gfl-status", "icon": "icons/proxmox.svg", "name": "GFL status", "type": "tool", "category": "tools", "script": "tools/gfl-status.sh",
+      "slug": "gfl-status", "icon": "icons/proxmox.svg", "name": "GFL status", "type": "tool", "category": "tools", "script": "tools/gfl-status.sh", "added": "2026-10-01",
       "summary": "See every GFL app on this host: status, address and pending updates.",
       "description": "Lists every container made with these scripts in one table: its app, whether it's running, the address to open it and how many OS updates are waiting. It only reads; nothing is changed.",
       "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html",
       "notes": ["Containers are recognised by the gfl tag the scripts add.", "Update counts come from each container's last package-list refresh, so they can lag a little."]
     },
     {
-      "slug": "update-gfl-apps", "icon": "icons/proxmox.svg", "name": "Update all GFL apps", "type": "tool", "category": "tools", "script": "tools/update-gfl-apps.sh",
+      "slug": "update-gfl-apps", "icon": "icons/proxmox.svg", "name": "Update all GFL apps", "type": "tool", "category": "tools", "script": "tools/update-gfl-apps.sh", "added": "2026-10-01",
       "summary": "Update every GFL app the right way, with a snapshot first if you like.",
       "description": "Runs each container's own update command, so every app is updated the way it should be (apt, Docker images, new releases). It can take a Proxmox snapshot of each container first, so a bad update rolls back in one click.",
       "website": "https://pve.proxmox.com/wiki/Linux_Container#pct_snapshot", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html",
       "notes": ["Run it from cron for automatic updates: GFL_MODE=default SNAPSHOT=yes bash -c \"$(curl -fsSL .../tools/update-gfl-apps.sh)\"", "Snapshots need storage that supports them, such as LVM-thin or ZFS. Remove old snapshots once you're happy with the update."]
     },
     {
-      "slug": "update-lxcs", "icon": "icons/proxmox.svg", "name": "Update all containers", "type": "tool", "category": "tools", "script": "tools/update-lxcs.sh",
+      "slug": "update-lxcs", "icon": "icons/proxmox.svg", "name": "Update all containers", "type": "tool", "category": "tools", "script": "tools/update-lxcs.sh", "added": "2026-09-30",
       "summary": "Update the OS packages in every running container at once.",
       "description": "Lists your running containers, lets you untick any you want to skip, then updates Debian, Ubuntu and Alpine containers one by one. At the end it tells you which ones want a reboot.",
       "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/wiki/Linux_Container",
       "notes": ["This updates the OS packages. To update an app itself, run update inside its container."]
     },
     {
-      "slug": "clean-kernels", "icon": "icons/linux.svg", "name": "Clean old kernels", "type": "tool", "category": "tools", "script": "tools/clean-kernels.sh",
+      "slug": "clean-kernels", "icon": "icons/linux.svg", "name": "Clean old kernels", "type": "tool", "category": "tools", "script": "tools/clean-kernels.sh", "added": "2026-09-30",
       "summary": "Free up boot space by removing old Proxmox kernels.",
       "description": "Shows the old kernel packages you can remove. The running kernel and the newest installed kernel are never offered.",
       "website": "https://pve.proxmox.com/wiki/Host_Bootloader", "docs": "https://pve.proxmox.com/wiki/Host_Bootloader"
     },
     {
-      "slug": "microcode", "icon": "icons/proxmox.svg", "name": "CPU microcode", "type": "tool", "category": "tools", "script": "tools/microcode.sh",
+      "slug": "microcode", "icon": "icons/proxmox.svg", "name": "CPU microcode", "type": "tool", "category": "tools", "script": "tools/microcode.sh", "added": "2026-09-30",
       "summary": "Install Intel or AMD CPU microcode updates.",
       "description": "Detects your CPU vendor and installs the matching microcode package, which carries security and stability fixes from Intel or AMD.",
       "website": "https://wiki.debian.org/Microcode", "docs": "https://wiki.debian.org/Microcode",
       "notes": ["Reboot the host afterwards to load the new microcode."]
     },
     {
-      "slug": "add-share", "icon": "icons/proxmox.svg", "name": "Mount a NAS share into containers", "type": "tool", "category": "tools", "script": "tools/add-share.sh",
+      "slug": "add-share", "icon": "icons/proxmox.svg", "name": "Mount a NAS share into containers", "type": "tool", "category": "tools", "script": "tools/add-share.sh", "added": "2026-10-01",
       "summary": "Give Radarr, Sonarr, Jellyfin and others your SMB or NFS share.",
       "website": "https://pve.proxmox.com/wiki/Linux_Container#_bind_mount_points", "docs": "https://pve.proxmox.com/wiki/Unprivileged_LXC_containers",
       "description": "Mounts an SMB/CIFS or NFS share from your NAS, TrueNAS or a Windows PC on the Proxmox host, so it comes back after every reboot, then passes it into the containers you tick at /data. SMB files are owned by the ID that unprivileged containers see as their media group, so the media apps can write to it.",
       "notes": ["Unprivileged containers are not allowed to mount network shares themselves; this tool mounts the share on the host and passes it in, which keeps the containers unprivileged.", "SMB logins are stored in /etc/gfl/shares/, readable only by root.", "For NFS, let uid/gid 101000 write on the NAS, or map all users to it (all_squash, anonuid=101000, anongid=101000)."]
     },
     {
-      "slug": "add-tailscale-lxc", "icon": "icons/tailscale-light.svg", "name": "Add Tailscale to a container", "type": "tool", "category": "tools", "script": "tools/add-tailscale-lxc.sh",
+      "slug": "add-tailscale-lxc", "icon": "icons/tailscale-light.svg", "name": "Add Tailscale to a container", "type": "tool", "category": "tools", "script": "tools/add-tailscale-lxc.sh", "added": "2026-09-30",
       "summary": "Put any existing container on your Tailscale network.",
       "description": "Pick a Debian or Ubuntu container. The tool passes /dev/net/tun into it, restarts it and installs Tailscale.",
       "website": "https://tailscale.com", "docs": "https://tailscale.com/kb/1130/lxc-unprivileged",
       "notes": ["Afterwards run pct exec <ID> -- tailscale up and open the link it prints."]
     },
     {
-      "slug": "add-gpu-lxc", "icon": "icons/proxmox.svg", "name": "Add GPU to a container", "type": "tool", "category": "tools", "script": "tools/add-gpu-lxc.sh",
+      "slug": "add-gpu-lxc", "icon": "icons/proxmox.svg", "name": "Add GPU to a container", "type": "tool", "category": "tools", "script": "tools/add-gpu-lxc.sh", "added": "2026-09-30",
       "summary": "Give an existing container the host's Intel or AMD GPU.",
       "description": "Passes every /dev/dri device into the container you pick, so apps like Jellyfin, Plex, Frigate or Immich can use hardware acceleration.",
       "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html"
     },
     {
-      "slug": "host-backup", "icon": "icons/proxmox.svg", "name": "Host config backup", "type": "tool", "category": "tools", "script": "tools/host-backup.sh",
+      "slug": "host-backup", "icon": "icons/proxmox.svg", "name": "Host config backup", "type": "tool", "category": "tools", "script": "tools/host-backup.sh", "added": "2026-09-30",
       "summary": "Back up the Proxmox host's own configuration files.",
       "description": "Saves /etc (including /etc/pve), /root and the cluster database as a dated archive and keeps the newest 10. It prints a one-line cron entry to run it daily.",
       "website": "https://pve.proxmox.com/wiki/Proxmox_Cluster_File_System_(pmxcfs)", "docs": "https://pve.proxmox.com/wiki/Backup_and_Restore",
