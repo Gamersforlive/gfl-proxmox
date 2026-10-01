@@ -38,13 +38,14 @@ update_os() {
   $STD apt-get update
   $STD apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
   $STD apt-get install -y curl ca-certificates gnupg sudo jq
+  if [ "${NETMOUNT:-no}" = "yes" ]; then $STD apt-get install -y cifs-utils nfs-common; fi
   msg_ok "Updated the OS"
 }
 
 # Adds an apt repository the modern way (deb822 + its own keyring).
 # add_repo <name> <key-url> <uri> <suite> <components>
 add_repo() {
-  local name="$1" key="$2" uri="$3" suite="$4" comps="$5"
+  local name="$1" key="$2" uri="$3" suite="$4" comps="${5:-}"
   local tmp
   tmp=$(mktemp)
   mkdir -p /etc/apt/keyrings
@@ -57,13 +58,14 @@ add_repo() {
   rm -f "$tmp"
   # apt verifies signatures as the unprivileged _apt user, so the keyring must be world-readable.
   chmod 644 "/etc/apt/keyrings/${name}.gpg"
-  cat >"/etc/apt/sources.list.d/${name}.sources" <<EOF
-Types: deb
-URIs: ${uri}
-Suites: ${suite}
-Components: ${comps}
-Signed-By: /etc/apt/keyrings/${name}.gpg
-EOF
+  {
+    echo "Types: deb"
+    echo "URIs: ${uri}"
+    echo "Suites: ${suite}"
+    # A "flat" repository (suite ./) has no components.
+    if [ -n "$comps" ]; then echo "Components: ${comps}"; fi
+    echo "Signed-By: /etc/apt/keyrings/${name}.gpg"
+  } >"/etc/apt/sources.list.d/${name}.sources"
   $STD apt-get update
 }
 
@@ -116,6 +118,19 @@ WantedBy=multi-user.target
 EOF
   systemctl enable -q --now "$slug"
   msg_ok "Installed ${name} on port ${port}"
+}
+
+# VA-API drivers for Intel/AMD hardware transcoding, when the GPU was passed in.
+# install_gpu_drivers <service-user>
+install_gpu_drivers() {
+  if [ "${GPU:-no}" != "yes" ]; then return 0; fi
+  msg_info "Installing GPU drivers for hardware transcoding"
+  $STD apt-get install -y va-driver-all vainfo
+  local g
+  for g in video render; do
+    if getent group "$g" >/dev/null; then usermod -aG "$g" "$1"; fi
+  done
+  msg_ok "Installed GPU drivers (check them with: vainfo)"
 }
 
 # Runs a compose stack stored in /opt/<dir>/compose.yaml (the caller writes the file first).

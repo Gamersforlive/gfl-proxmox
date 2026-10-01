@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Passes the host's Intel/AMD GPU (/dev/dri) into an existing container, for transcoding or AI.
 
 # shellcheck source=/dev/null

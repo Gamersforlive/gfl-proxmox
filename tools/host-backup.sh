@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Backs up the host's own configuration (/etc including /etc/pve, /root, the cluster database).
 # Guests are backed up by Proxmox itself (Datacenter > Backup); this covers the host.
 

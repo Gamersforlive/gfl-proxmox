@@ -155,8 +155,15 @@ chmod -R 775 /tank/data</code></pre>
     ├── movies/  Radarr root folder, Jellyfin library
     └── tv/      Sonarr root folder, Jellyfin library</code></pre>
 
-<h2>A NAS share</h2>
-<p>Add the share to Proxmox under <b>Datacenter &gt; Storage &gt; Add &gt; SMB/CIFS</b> or <b>NFS</b>. It appears on the host at <code>/mnt/pve/&lt;name&gt;</code>; bind-mount that path as above.</p>`
+<h2>A NAS share (SMB or NFS)</h2>
+<p>Unprivileged containers are not allowed to mount network shares themselves. The safe way is to mount the share on the Proxmox host and pass it in. This tool does both: it asks for the server, share and login, mounts it at <code>/mnt/gfl/&lt;name&gt;</code> so it comes back after a reboot, and lets you tick the containers that should get it at <code>/data</code>.</p>
+${run("tools/add-share.sh")}
+<p>For a new container, open <b>Custom settings</b> on the app's page and set <b>Host folder to mount</b> to the share, for example <code>/mnt/gfl/nas-media</code>. The app is created with the share already at <code>/data</code>.</p>
+<div class="callout"><p><b>SMB:</b> files show up owned by uid/gid 101000, which unprivileged containers see as the <code>media</code> group, so Radarr, Sonarr and qBittorrent can write. <b>NFS:</b> the NAS decides who owns files. Let uid/gid 101000 write, or map all users to it on the NAS (<code>all_squash,anonuid=101000,anongid=101000</code>).</p></div>
+
+<h2>Mounting shares inside a privileged container</h2>
+<p>If you'd rather mount the share inside the container (with <code>/etc/fstab</code> or <code>mount -t cifs</code>), turn on <b>Allow SMB/NFS mounts inside</b> in Custom settings, or pick <b>Privileged</b> in the Advanced menu and answer yes to network shares. The container becomes privileged, gets the <code>mount=cifs;nfs</code> feature, and has <code>cifs-utils</code> and <code>nfs-common</code> installed.</p>
+<div class="callout warn"><p>Root inside a privileged container is effectively root on the host. Use the share tool above unless you have a reason not to.</p></div>`
     },
     {
       id: "gpu-passthrough", group: "Using the scripts", title: "GPU passthrough",
@@ -359,6 +366,8 @@ GFL_RAW=file:///root/gfl-proxmox bash /root/gfl-proxmox/ct/myapp.sh</code></pre>
 <p>You can, but one app per container keeps updates, backups and resource limits simple. Containers cost very little.</p>
 <h3>Where can I get help or suggest an app?</h3>
 <p>In the <a href="https://discord.gamersforlive.com" target="_blank" rel="noopener">GamersForLive Discord</a>, or by opening an issue on GitHub.</p>
+<h3>Can I use these scripts for my business, or share them?</h3>
+<p>You can run them on any servers you own or manage, at home or at work, for free. You can't republish, mirror, rebrand or sell the scripts or this website without written permission. Share a link to this site instead. The full terms are in the <a href="https://github.com/gamersforlive/gfl-proxmox/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>; ask for permission on the Discord.</p>
 <h3>Is this the community-scripts project?</h3>
 <p>No. GFL Proxmox Scripts is the GamersForLive collection, inspired by the community-scripts ProxmoxVE project and written from scratch, with gaming servers and the GFL media stack in mind.</p>`
     }

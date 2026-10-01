@@ -40,6 +40,7 @@ variables() {
   var_tun="${var_tun:-no}"
   var_swap="${var_swap:-512}"
   var_onboot="${var_onboot:-1}"
+  var_netmount="${var_netmount:-no}"
   var_tags="${var_tags:-}"
   VERBOSE="${VERBOSE:-no}"
 }
@@ -95,6 +96,11 @@ default_settings() {
   NS="${NS:-}"
   SD="${SD:-}"
   CT_TYPE="$var_unprivileged"
+  NETMOUNT="$var_netmount"
+  # Mounting SMB/NFS inside a container is only allowed in privileged containers.
+  if [ "$NETMOUNT" = "yes" ]; then CT_TYPE=0; fi
+  MP_HOST="${MP_HOST:-}"
+  MP_PATH="${MP_PATH:-/data}"
   PW="${PW:-}"
   SSH="${SSH:-no}"
   GPU="$var_gpu"
@@ -130,6 +136,13 @@ validate_settings() {
   if [ -n "$MTU" ] && ! [[ "$MTU" =~ ^[0-9]+$ ]]; then bad+="\n     MTU must be a number"; fi
   if [ -n "$MAC" ] && ! [[ "$MAC" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then bad+="\n     MAC '${MAC}' is not like BC:24:11:AA:BB:CC"; fi
   if [ -n "$NS" ] && ! [[ "$NS" =~ ^[0-9a-fA-F.:\ ]+$ ]]; then bad+="\n     DNS server must be one or more IP addresses"; fi
+  if [ -n "$MP_HOST" ]; then
+    if [ ! -d "$MP_HOST" ]; then bad+="\n     Host folder '${MP_HOST}' does not exist on this host"; fi
+    if ! [[ "$MP_PATH" =~ ^/[A-Za-z0-9._/-]*$ ]]; then bad+="\n     Mount path inside the container must start with /"; fi
+  fi
+  if [ "$NETMOUNT" = "yes" ] && [ "$CT_TYPE" != "0" ]; then
+    bad+="\n     SMB/NFS mounts inside a container need a privileged container"
+  fi
   if [ -n "$bad" ]; then
     msg_error "Some settings are not valid:${bad}"
     exit 1
@@ -151,6 +164,8 @@ show_summary() {
   if [ -n "$NS$SD" ]; then echo -e "${INFO} DNS:           ${BL}${NS:-host default}${SD:+, search ${SD}}${CL}"; fi
   echo -e "${INFO} Login:         ${BL}${login}${CL}"
   if [ "$ONBOOT" = "0" ]; then echo -e "${INFO} Start at boot: ${BL}no${CL}"; fi
+  if [ -n "$MP_HOST" ]; then echo -e "${INFO} Host folder:   ${BL}${MP_HOST} -> ${MP_PATH}${CL}"; fi
+  if [ "$NETMOUNT" = "yes" ]; then echo -e "${INFO} Shares:        ${BL}SMB/NFS can be mounted inside (privileged)${CL}"; fi
   if [ "$GPU" = "yes" ]; then echo -e "${INFO} GPU:           ${BL}/dev/dri passed through${CL}"; fi
   echo
 }
@@ -179,10 +194,17 @@ advanced_settings() {
   ask HN "Hostname" "Hostname (letters, numbers and dashes)" "$HN"
   HN="${HN,,}"
   if whiptail --backtitle "$BACKTITLE" --title "Container type" --yes-button "Unprivileged" --no-button "Privileged" \
-    --yesno "Unprivileged is safer and works for almost every app.\nPick Privileged only if an app's page tells you to." 10 64; then
+    --yesno "Unprivileged is safer and works for almost every app.\nPick Privileged if you want to mount SMB/NFS shares inside the container." 10 64; then
     CT_TYPE=1
+    NETMOUNT=no
   else
     CT_TYPE=0
+    if whiptail --backtitle "$BACKTITLE" --title "Network shares" --yesno \
+      "Allow mounting SMB/NFS shares inside this container?\n(Installs cifs-utils and nfs-common and turns on the mount feature.)" 10 64; then
+      NETMOUNT=yes
+    else
+      NETMOUNT=no
+    fi
   fi
   ask_password
   ask CORE_COUNT "CPU" "CPU cores" "$CORE_COUNT"
@@ -208,6 +230,10 @@ advanced_settings() {
     GATE6=""
   fi
   ask VLAN "VLAN" "VLAN tag (leave empty for none)" "$VLAN"
+  ask MP_HOST "Host folder" "Folder on this Proxmox host to pass into the container,\nfor example a NAS share mounted at /mnt/gfl/nas. Leave empty for none." "$MP_HOST"
+  if [ -n "$MP_HOST" ]; then
+    ask MP_PATH "Path inside" "Where it appears inside the container (media apps use /data)" "$MP_PATH"
+  fi
   ask NS "DNS server" "DNS server(s), separated by spaces.\nLeave empty to use the host's DNS." "$NS"
   ask SD "Search domain" "DNS search domain (example: home.lan).\nLeave empty to use the host's." "$SD"
   if [ -e /dev/dri/renderD128 ]; then
@@ -329,6 +355,7 @@ build_container() {
 
   local features="nesting=1"
   if [ "$CT_TYPE" = "1" ] && [ "$var_docker" = "yes" ]; then features="nesting=1,keyctl=1"; fi
+  if [ "$NETMOUNT" = "yes" ]; then features+=",mount=cifs;nfs"; fi
   local net="name=eth0,bridge=${BRG},ip=${NET}"
   if [ -n "$GATE" ]; then net+=",gw=${GATE}"; fi
   if [ "$IPV6" != "none" ]; then net+=",ip6=${IPV6}"; fi
@@ -360,6 +387,10 @@ build_container() {
       dev=$((dev + 1))
     done
     msg_ok "Passed the GPU (/dev/dri) into the container"
+  fi
+  if [ -n "$MP_HOST" ]; then
+    pct set "$CT_ID" -mp0 "${MP_HOST},mp=${MP_PATH}" >/dev/null
+    msg_ok "Passed ${MP_HOST} into the container at ${MP_PATH}"
   fi
   if [ "$var_tun" = "yes" ]; then
     pct set "$CT_ID" "-dev${dev}" "/dev/net/tun,mode=0666" >/dev/null
@@ -394,7 +425,7 @@ build_container() {
 
   if ! pct exec "$CT_ID" -- env \
     APP="$APP" NSAPP="$NSAPP" VERBOSE="$VERBOSE" GFL_RAW="$GFL_RAW" GFL_SITE="$GFL_SITE" \
-    CTTYPE="$CT_TYPE" GPU="$GPU" SSH_ROOT="$SSH" PASSWORD_SET="$([ -n "$PW" ] && echo yes || echo no)" \
+    CTTYPE="$CT_TYPE" GPU="$GPU" SSH_ROOT="$SSH" NETMOUNT="$NETMOUNT" PASSWORD_SET="$([ -n "$PW" ] && echo yes || echo no)" \
     TERM="${TERM:-xterm}" ${GFL_EXTRA_ENV[@]+"${GFL_EXTRA_ENV[@]}"} bash /opt/gfl/install.sh; then
     msg_error "The ${APP} installer failed inside container ${CT_ID}."
     echo -e "${INFO} The container is left running so you can look around: ${BL}pct enter ${CT_ID}${CL}"

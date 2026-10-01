@@ -6,7 +6,9 @@
     { "id": "media", "name": "Media & downloads" },
     { "id": "network", "name": "Network & DNS" },
     { "id": "security", "name": "Security & VPN" },
+    { "id": "files", "name": "Files & automation" },
     { "id": "monitoring", "name": "Monitoring" },
+    { "id": "home", "name": "Smart home" },
     { "id": "ai", "name": "AI" },
     { "id": "gaming", "name": "Gaming" },
     { "id": "database", "name": "Databases" },
@@ -28,7 +30,8 @@
       "summary": "Manage Docker containers, stacks and images from your browser.",
       "description": "Docker plus Portainer CE (the long-term-support release). Portainer gives you a web dashboard for containers, images, volumes, networks and compose stacks.",
       "website": "https://www.portainer.io", "docs": "https://docs.portainer.io",
-      "port": 9443, "proto": "https",
+      "port": 9443,
+      "proto": "https",
       "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
       "flags": ["docker"],
       "login": "Create the admin account on first visit.",
@@ -43,6 +46,16 @@
       "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
       "flags": ["docker"],
       "login": "Create your login on first visit."
+    },
+    {
+      "slug": "homepage", "icon": "icons/homepage.png", "name": "Homepage", "type": "ct", "category": "docker",
+      "summary": "A fast, good-looking start page for all your apps.",
+      "description": "Homepage in Docker: a dashboard with links, live status and widgets for your apps, configured with simple YAML files.",
+      "website": "https://gethomepage.dev", "docs": "https://gethomepage.dev/configs/",
+      "port": 3000,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "notes": ["Edit services.yaml and the other files in /opt/homepage/config. The page picks up changes by itself."]
     },
     {
       "slug": "jellyfin", "icon": "icons/jellyfin.svg", "name": "Jellyfin", "type": "ct", "category": "media",
@@ -93,6 +106,80 @@
       "resources": { "cpu": 2, "ram": 1024, "disk": 8 },
       "login": "User admin. The password is in /root/qbittorrent.creds inside the container.",
       "notes": ["Read the password from the Proxmox host with: pct exec <ID> -- cat /root/qbittorrent.creds"]
+    },
+    {
+      "slug": "plex", "icon": "icons/plex.svg", "name": "Plex", "type": "ct", "category": "media",
+      "summary": "The popular media server, with hardware transcoding ready.",
+      "description": "Plex Media Server from Plex's own repository. If your host has an Intel or AMD GPU it is passed in and the VA-API drivers are installed, ready for hardware transcoding (a Plex Pass feature).",
+      "website": "https://www.plex.tv", "docs": "https://support.plex.tv/articles/categories/your-media/",
+      "port": 32400,
+      "proto": "http",
+      "path": "/web",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["gpu"],
+      "login": "Sign in with your Plex account to claim the server.",
+      "notes": ["Open http://<container-ip>:32400/web from a device on the same network to claim the server.", "Media folders are ready at /data/media/movies and /data/media/tv. Mount your storage there; see Storage and shared folders in the docs."]
+    },
+    {
+      "slug": "lidarr", "icon": "icons/lidarr.svg", "name": "Lidarr", "type": "ct", "category": "media",
+      "summary": "Finds, downloads and organises music automatically.",
+      "description": "Lidarr from the official release, running as its own user in the shared media group, like Radarr and Sonarr.",
+      "website": "https://lidarr.audio", "docs": "https://wiki.servarr.com/lidarr",
+      "port": 8686,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 4 },
+      "login": "Lidarr asks you to choose a login method on first visit.",
+      "notes": ["Lidarr updates itself from Settings > General > Updates."]
+    },
+    {
+      "slug": "seerr", "icon": "icons/seerr.svg", "name": "Seerr", "type": "ct", "category": "media",
+      "summary": "Let friends request movies and shows for your media server.",
+      "description": "Seerr, the successor to Jellyseerr and Overseerr, in Docker. People sign in with their Jellyfin, Plex or Emby account and request titles; Seerr sends them to Radarr and Sonarr.",
+      "website": "https://github.com/seerr-team/seerr", "docs": "https://docs.seerr.dev",
+      "port": 5055,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Sign in with your Jellyfin, Plex or Emby admin account in the setup wizard."
+    },
+    {
+      "slug": "flaresolverr", "icon": "icons/flaresolverr.svg", "name": "FlareSolverr", "type": "ct", "category": "media",
+      "summary": "Gets Prowlarr past Cloudflare checks on some indexers.",
+      "description": "FlareSolverr in Docker. Prowlarr sends requests for protected indexers through it, and it solves the Cloudflare challenge in a headless browser.",
+      "website": "https://github.com/FlareSolverr/FlareSolverr", "docs": "https://github.com/FlareSolverr/FlareSolverr#readme",
+      "port": 8191,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
+      "flags": ["docker"],
+      "notes": ["In Prowlarr, open Settings > Indexers, add FlareSolverr with http://<container-ip>:8191 and give it a tag. Add the same tag to indexers that need it."]
+    },
+    {
+      "slug": "navidrome", "icon": "icons/navidrome.svg", "name": "Navidrome", "type": "ct", "category": "media",
+      "summary": "Your own music streaming server, like a private Spotify.",
+      "description": "Navidrome from its official release package. Streams your music collection to the web and to any Subsonic app on your phone.",
+      "website": "https://www.navidrome.org", "docs": "https://www.navidrome.org/docs/",
+      "port": 4533,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "login": "Create the admin account on first visit.",
+      "notes": ["Put your music in /data/media/music, or mount it there; see Storage and shared folders in the docs."]
+    },
+    {
+      "slug": "audiobookshelf", "icon": "icons/audiobookshelf.svg", "name": "Audiobookshelf", "type": "ct", "category": "media",
+      "summary": "Server for audiobooks and podcasts, with phone apps.",
+      "description": "Audiobookshelf from its official repository. Streams audiobooks and podcasts, remembers where you stopped, and has apps for Android and iOS.",
+      "website": "https://www.audiobookshelf.org", "docs": "https://www.audiobookshelf.org/docs",
+      "port": 13378,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 8 },
+      "login": "Create the root user on first visit.",
+      "notes": ["Library folders are ready at /data/media/audiobooks and /data/media/podcasts."]
+    },
+    {
+      "slug": "immich", "icon": "icons/immich.svg", "name": "Immich", "type": "ct", "category": "media",
+      "summary": "Self-hosted Google Photos: backup, faces, search and sharing.",
+      "description": "Immich with its own official compose file and settings from the newest release. Phones back up automatically, and machine learning finds faces and lets you search your photos by what is in them.",
+      "website": "https://immich.app", "docs": "https://immich.app/docs/overview/introduction",
+      "port": 2283,
+      "resources": { "cpu": 4, "ram": 6144, "disk": 32 },
+      "flags": ["docker", "gpu"],
+      "login": "Create the admin account on first visit.",
+      "notes": ["Photos are stored in /data/immich/library. Mount large storage there before you start uploading.", "The first start downloads about 3 GB of images."]
     },
     {
       "slug": "adguard", "icon": "icons/adguard-home.svg", "name": "AdGuard Home", "type": "ct", "category": "network",
@@ -155,6 +242,48 @@
       "notes": ["Browsers only allow the web vault over HTTPS. Put it behind Nginx Proxy Manager, Caddy or a Cloudflare Tunnel.", "After creating your accounts, set SIGNUPS_ALLOWED=false in /opt/vaultwarden/compose.yaml and run docker compose up -d."]
     },
     {
+      "slug": "syncthing", "icon": "icons/syncthing.svg", "name": "Syncthing", "type": "ct", "category": "files",
+      "summary": "Keep folders in sync between your PCs, phone and server.",
+      "description": "Syncthing from its official repository, running as its own user with the web UI open to your network. Files go directly between your devices, with no cloud in between.",
+      "website": "https://syncthing.net", "docs": "https://docs.syncthing.net",
+      "port": 8384,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 16 },
+      "login": "No login at first: set a GUI user and password right away under Actions > Settings > GUI.",
+      "notes": ["Synced folders go in /data/sync. Mount larger storage there if you need it."]
+    },
+    {
+      "slug": "gitea", "icon": "icons/gitea.svg", "name": "Gitea", "type": "ct", "category": "files",
+      "summary": "Your own GitHub: Git hosting with issues and pull requests.",
+      "description": "Gitea installed from its official binary, following the Gitea docs. Lightweight Git hosting with a web UI, issues, pull requests, packages and Actions.",
+      "website": "https://about.gitea.com", "docs": "https://docs.gitea.com",
+      "port": 3000,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 16 },
+      "login": "Create the admin account at the bottom of the installer page.",
+      "notes": ["On the installer page, pick SQLite as the database unless you already run MariaDB or PostgreSQL."]
+    },
+    {
+      "slug": "paperless-ngx", "icon": "icons/paperless-ngx.svg", "name": "Paperless-ngx", "type": "ct", "category": "files",
+      "summary": "Scan, OCR and search all your paper documents.",
+      "description": "Paperless-ngx in Docker with Redis. It reads the text in every scan or PDF, tags and files it, and makes everything searchable. An admin account is created for you.",
+      "website": "https://docs.paperless-ngx.com", "docs": "https://docs.paperless-ngx.com/usage/",
+      "port": 8000,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["docker"],
+      "login": "User admin. The password is in /root/paperless-ngx.creds inside the container.",
+      "notes": ["Drop files into /opt/paperless-ngx/consume and Paperless imports them."]
+    },
+    {
+      "slug": "n8n", "icon": "icons/n8n.svg", "name": "n8n", "type": "ct", "category": "files",
+      "summary": "Automate anything: connect apps and APIs with workflows.",
+      "description": "n8n in Docker. Build workflows that connect hundreds of services, from Discord bots to backups and alerts, in a visual editor.",
+      "website": "https://n8n.io", "docs": "https://docs.n8n.io",
+      "port": 5678,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Create the owner account on first visit.",
+      "notes": ["Secure cookies are turned off so login works over plain http on your LAN. Remove N8N_SECURE_COOKIE from /opt/n8n/compose.yaml once n8n is behind HTTPS."]
+    },
+    {
       "slug": "uptime-kuma", "icon": "icons/uptime-kuma.svg", "name": "Uptime Kuma", "type": "ct", "category": "monitoring",
       "summary": "Watch your sites and servers and get pinged when one goes down.",
       "description": "Uptime Kuma from source on Node.js 22. Monitors HTTP, TCP, ping, DNS and game servers, and alerts you on Discord, Telegram, email and more.",
@@ -171,6 +300,36 @@
       "port": 3000,
       "resources": { "cpu": 1, "ram": 512, "disk": 4 },
       "login": "admin / admin. Grafana makes you change it on first login."
+    },
+    {
+      "slug": "prometheus", "icon": "icons/prometheus.svg", "name": "Prometheus", "type": "ct", "category": "monitoring",
+      "summary": "Collects metrics from your servers and apps over time.",
+      "description": "Prometheus and the node exporter from Debian. Pair it with Grafana for dashboards; Proxmox itself can send metrics too.",
+      "website": "https://prometheus.io", "docs": "https://prometheus.io/docs/introduction/overview/",
+      "port": 9090,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 16 },
+      "notes": ["Add scrape targets in /etc/prometheus/prometheus.yml, then run systemctl reload prometheus.", "In Grafana, add a Prometheus data source with http://<container-ip>:9090."]
+    },
+    {
+      "slug": "mosquitto", "icon": "icons/mosquitto.svg", "name": "Mosquitto", "type": "ct", "category": "home",
+      "summary": "MQTT broker for Home Assistant, Zigbee2MQTT and sensors.",
+      "description": "Eclipse Mosquitto from Debian, listening on port 1883 with login required and a generated password.",
+      "website": "https://mosquitto.org", "docs": "https://mosquitto.org/documentation/",
+      "port": 1883,
+      "proto": "mqtt",
+      "resources": { "cpu": 1, "ram": 512, "disk": 2 },
+      "login": "User gfl. The password is in /root/mosquitto.creds inside the container.",
+      "notes": ["Add more users inside the container: mosquitto_passwd /etc/mosquitto/passwd <name>, then systemctl restart mosquitto."]
+    },
+    {
+      "slug": "node-red", "icon": "icons/node-red.svg", "name": "Node-RED", "type": "ct", "category": "home",
+      "summary": "Wire together devices and services with drag-and-drop flows.",
+      "description": "Node-RED on Node.js 22, running as its own user. A favourite for home automation alongside Home Assistant and MQTT.",
+      "website": "https://nodered.org", "docs": "https://nodered.org/docs/",
+      "port": 1880,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "login": "No login at first.",
+      "notes": ["Protect the editor before exposing it: set adminAuth in /var/lib/node-red/settings.js, then systemctl restart node-red."]
     },
     {
       "slug": "ollama", "icon": "icons/ollama-light.svg", "name": "Ollama", "type": "ct", "category": "ai",
@@ -198,7 +357,8 @@
       "summary": "A fast Paper Minecraft server on the newest stable version.",
       "description": "Paper, the high-performance Minecraft server, on Java 25. The server gets most of the container's memory, runs as a service, and has a console you can open any time.",
       "website": "https://papermc.io", "docs": "https://docs.papermc.io/paper",
-      "port": 25565, "proto": "minecraft",
+      "port": 25565,
+      "proto": "minecraft",
       "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
       "notes": ["The script asks you to accept the Minecraft EULA first.", "Open the live console inside the container with mc-console. Leave it with Ctrl+A, then D.", "Switch Minecraft versions: MC_VERSION=26.2 /opt/minecraft/paper-update.sh, then systemctl restart minecraft."]
     },
@@ -212,11 +372,22 @@
       "notes": ["In your panel go to Admin > Nodes > your node > Configuration and copy the config.", "Paste it into /etc/pterodactyl/config.yml inside the container, then run systemctl start wings.", "Allocate game ports in the panel and forward them on your router to this container's IP."]
     },
     {
+      "slug": "factorio", "name": "Factorio", "type": "ct", "category": "gaming",
+      "summary": "A Factorio dedicated server with a fresh world, ready to join.",
+      "description": "The official Factorio headless server, which is free to download. A new world is created, and the server runs as a service that loads the latest save on start.",
+      "website": "https://factorio.com", "docs": "https://wiki.factorio.com/Multiplayer#Dedicated/Headless_server",
+      "port": 34197,
+      "proto": "udp",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
+      "notes": ["Join with the container's IP. Forward UDP port 34197 on your router for friends outside your network.", "Set the server name, password and public listing in /opt/factorio/data/server-settings.json, then systemctl restart factorio."]
+    },
+    {
       "slug": "mariadb", "icon": "icons/mariadb.svg", "name": "MariaDB", "type": "ct", "category": "database",
       "summary": "MySQL-compatible database server, reachable from your network.",
       "description": "MariaDB from Debian, listening on all interfaces with an admin user and a random password.",
       "website": "https://mariadb.org", "docs": "https://mariadb.com/kb/en/documentation/",
-      "port": 3306, "proto": "mysql",
+      "port": 3306,
+      "proto": "mysql",
       "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
       "login": "User admin. The password is in /root/mariadb.creds inside the container."
     },
@@ -225,9 +396,20 @@
       "summary": "PostgreSQL database server, reachable from your network.",
       "description": "PostgreSQL from Debian, listening on all interfaces with password login. The postgres user gets a random password.",
       "website": "https://www.postgresql.org", "docs": "https://www.postgresql.org/docs/current/",
-      "port": 5432, "proto": "postgresql",
+      "port": 5432,
+      "proto": "postgresql",
       "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
       "login": "User postgres. The password is in /root/postgresql.creds inside the container."
+    },
+    {
+      "slug": "redis", "icon": "icons/redis.svg", "name": "Redis", "type": "ct", "category": "database",
+      "summary": "Fast in-memory key-value store, reachable from your network.",
+      "description": "Redis from Debian, listening on all interfaces with a generated password.",
+      "website": "https://redis.io", "docs": "https://redis.io/docs/latest/",
+      "port": 6379,
+      "proto": "redis",
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "login": "The password is in /root/redis.creds inside the container."
     },
     {
       "slug": "haos-vm", "icon": "icons/home-assistant.svg", "name": "Home Assistant OS", "type": "vm", "category": "vm", "script": "vm/haos-vm.sh",
@@ -274,6 +456,13 @@
       "description": "Detects your CPU vendor and installs the matching microcode package, which carries security and stability fixes from Intel or AMD.",
       "website": "https://wiki.debian.org/Microcode", "docs": "https://wiki.debian.org/Microcode",
       "notes": ["Reboot the host afterwards to load the new microcode."]
+    },
+    {
+      "slug": "add-share", "icon": "icons/proxmox.svg", "name": "Mount a NAS share into containers", "type": "tool", "category": "tools", "script": "tools/add-share.sh",
+      "summary": "Give Radarr, Sonarr, Jellyfin and others your SMB or NFS share.",
+      "website": "https://pve.proxmox.com/wiki/Linux_Container#_bind_mount_points", "docs": "https://pve.proxmox.com/wiki/Unprivileged_LXC_containers",
+      "description": "Mounts an SMB/CIFS or NFS share from your NAS, TrueNAS or a Windows PC on the Proxmox host, so it comes back after every reboot, then passes it into the containers you tick at /data. SMB files are owned by the ID that unprivileged containers see as their media group, so the media apps can write to it.",
+      "notes": ["Unprivileged containers are not allowed to mount network shares themselves; this tool mounts the share on the host and passes it in, which keeps the containers unprivileged.", "SMB logins are stored in /etc/gfl/shares/, readable only by root.", "For NFS, let uid/gid 101000 write on the NAS, or map all users to it (all_squash, anonuid=101000, anongid=101000)."]
     },
     {
       "slug": "add-tailscale-lxc", "icon": "icons/tailscale-light.svg", "name": "Add Tailscale to a container", "type": "tool", "category": "tools", "script": "tools/add-tailscale-lxc.sh",

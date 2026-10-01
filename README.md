@@ -71,4 +71,11 @@ App logos in `frontend/icons/` come from [dashboard-icons](https://github.com/ho
 (Apache-2.0); each logo is a trademark of its project.
 
 Inspired by the [community-scripts ProxmoxVE](https://github.com/community-scripts/ProxmoxVE) project.
-Not affiliated with Proxmox Server Solutions GmbH. MIT licensed.
+Not affiliated with Proxmox Server Solutions GmbH.
+
+## License
+
+© GamersForLive. All rights reserved: see [LICENSE](LICENSE). In short, you may **run** these scripts
+(home or business) and read or change them for your own use, and you're welcome to send improvements.
+You may **not** republish, mirror, rebrand or sell the scripts or the website without written permission.
+Ask on the [Discord](https://discord.gamersforlive.com).

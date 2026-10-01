@@ -1,21 +1,63 @@
-MIT License
+GFL Proxmox Scripts License
 
-Copyright (c) 2026 GamersForLive
+Copyright (c) 2026 GamersForLive. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license covers the scripts, the website and the documentation in this
+repository (together, "the Software"), except third-party material listed at the
+end.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. What you may do
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   a. Run. You may run the Software, including through the install commands on
+      the website, on computers you own or manage, for personal or business use,
+      at no cost.
+   b. Read and change for yourself. You may read the source code and change it
+      for your own private use on your own computers.
+   c. Contribute. You may suggest changes to GamersForLive, for example through
+      pull requests or issues on the official repository.
+   d. Fork on GitHub. GitHub's terms let you view and fork this repository on
+      GitHub. A fork may be used only for 1.b and 1.c; it does not grant any
+      other right.
+
+2. What you may not do without written permission from GamersForLive
+
+   a. Publish, upload, mirror or host the Software, or a changed version of it,
+      anywhere other than as allowed in section 1, including as your own
+      website, script collection or download.
+   b. Remove or change the GamersForLive name, branding or this license, or
+      present the Software as your own work.
+   c. Sell, sublicense or rent the Software, or include it in another product,
+      service, script collection or website.
+
+3. Contributions
+
+   If you send a contribution, you allow GamersForLive to use, change and
+   publish it as part of the Software under this license or any later license.
+
+4. Third-party material
+
+   Each third-party part keeps its own license and is not covered by sections
+   1 to 3:
+   - App logos in frontend/icons/ come from homarr-labs/dashboard-icons
+     (Apache License 2.0). Each logo is a trademark of its own project.
+   - The apps that the scripts install are separate projects under their own
+     licenses.
+
+5. Earlier versions
+
+   Versions of the Software published before this license was added were
+   released under the MIT License, and stay under it for anyone who obtained
+   them then. Every later version is under this license.
+
+6. No warranty
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   GAMERSFORLIVE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE. You run the scripts on
+   your own systems at your own risk.
+
+7. Permission requests
+
+   Ask for permission on the GamersForLive Discord: https://discord.gamersforlive.com

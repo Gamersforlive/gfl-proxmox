@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Creates a Home Assistant OS virtual machine from the official image.
 # Upstream: https://www.home-assistant.io/installation/generic-x86-64
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Adds Tailscale to an existing Debian/Ubuntu container: passes /dev/net/tun in and installs it.
 
 # shellcheck source=/dev/null

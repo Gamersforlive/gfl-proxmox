@@ -32,7 +32,9 @@ window.GFL_CONFIG = (() => {
         f("CT_ID", "Container ID", "number", { ph: "next free", check: intIn(100, 999999999), hint: "Empty = next free ID" }),
         f("HN", "Hostname", "text", { def: s.slug, check: (v) => /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(v) ? null : "Lowercase letters, numbers and dashes" }),
         f("var_version", "Debian version", "select", { def: "13", options: [["13", "Debian 13 (trixie)"], ["12", "Debian 12 (bookworm)"]] }),
-        f("var_unprivileged", "Container type", "select", { def: "1", options: [["1", "Unprivileged (recommended)"], ["0", "Privileged"]] }),
+        f("var_unprivileged", "Container type", "select", { def: "1", options: [["1", "Unprivileged (recommended)"], ["0", "Privileged"]],
+          warn: (v, all) => all.var_netmount === "yes" && v === "1" ? "Becomes privileged: SMB/NFS mounts inside need it" : v === "0" ? "Root in a privileged container is root on the host. Only use it when you need it." : null }),
+        f("var_netmount", "Allow SMB/NFS mounts inside", "switch", { def: "no", on: "yes", off: "no", hint: "Makes the container privileged. Usually better: the NAS share tool." }),
         f("var_onboot", "Start at boot", "switch", { def: "1" })
       ] },
       { group: "Resources", fields: [
@@ -58,7 +60,9 @@ window.GFL_CONFIG = (() => {
       ] },
       { group: "Storage", fields: [
         f("GFL_STORAGE", "Disk storage", "text", { ph: "ask if several", hint: "For example local-lvm or local-zfs", check: (v) => !v || /^[A-Za-z0-9._-]+$/.test(v) ? null : "A storage name from Datacenter > Storage" }),
-        f("GFL_TEMPLATE_STORAGE", "Template storage", "text", { ph: "ask if several", hint: "Usually local", check: (v) => !v || /^[A-Za-z0-9._-]+$/.test(v) ? null : "A storage name" })
+        f("GFL_TEMPLATE_STORAGE", "Template storage", "text", { ph: "ask if several", hint: "Usually local", check: (v) => !v || /^[A-Za-z0-9._-]+$/.test(v) ? null : "A storage name" }),
+        f("MP_HOST", "Host folder to mount", "text", { ph: "none", hint: "A folder or NAS share on the host, like /mnt/gfl/nas", check: (v) => !v || /^\/[A-Za-z0-9._\/-]*$/.test(v) ? null : "An absolute path like /mnt/gfl/nas" }),
+        f("MP_PATH", "Mount it at", "text", { def: "/data", show: (v) => !!(v.MP_HOST || "").trim(), req: true, hint: "Media apps use /data", check: (v) => /^\/[A-Za-z0-9._\/-]*$/.test(v) ? null : "A path like /data" })
       ] },
       { group: "Access and extras", fields: [
         f("password", "Root password", "select", { def: "none", options: [["none", "None: console logs in automatically"], ["ask", "Ask me in the terminal"]], hint: "Never put a password in a command; the script asks for it." }),
@@ -150,7 +154,10 @@ window.GFL_CONFIG = (() => {
       put("CT_ID", v.CT_ID);
       if (changed("HN")) put("HN", v.HN);
       if (changed("var_version")) put("var_version", v.var_version);
-      for (const k of ["var_unprivileged", "var_cpu", "var_ram", "var_swap", "var_disk", "var_onboot", "BRG"]) if (changed(k)) put(k, v[k]);
+      if (v.var_netmount === "yes") { put("var_unprivileged", "0"); put("var_netmount", "yes"); }
+      else if (changed("var_unprivileged")) put("var_unprivileged", v.var_unprivileged);
+      for (const k of ["var_cpu", "var_ram", "var_swap", "var_disk", "var_onboot", "BRG"]) if (changed(k)) put(k, v[k]);
+      if ((v.MP_HOST || "").trim()) { put("MP_HOST", v.MP_HOST); if (changed("MP_PATH")) put("MP_PATH", v.MP_PATH); }
       if (v.ipv4 === "static") { put("NET", v.NET); put("GATE", v.GATE); }
       if (v.ipv6 === "static") { put("IPV6", v.IPV6); put("GATE6", v.GATE6); } else if (v.ipv6 !== "none") put("IPV6", v.ipv6);
       for (const k of ["VLAN", "MTU", "MAC", "NS", "SD", "GFL_STORAGE", "GFL_TEMPLATE_STORAGE"]) put(k, v[k]);

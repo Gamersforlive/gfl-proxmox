@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck source=/dev/null
 source <(curl -fsSL "${GFL_RAW:-https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main}/misc/build.func")
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Upstream: https://github.com/wg-easy/wg-easy
 
 APP="wg-easy"

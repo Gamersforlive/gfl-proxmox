@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Updates the OS packages in every running container (Debian, Ubuntu and Alpine).
 
 # shellcheck source=/dev/null

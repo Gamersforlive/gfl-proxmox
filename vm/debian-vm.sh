@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GFL Proxmox Scripts · MIT · https://github.com/gamersforlive/gfl-proxmox
+# GFL Proxmox Scripts · (c) GamersForLive · see LICENSE · https://github.com/gamersforlive/gfl-proxmox
 # Creates a Debian 13 virtual machine from the official cloud image, set up with cloud-init.
 # Upstream: https://cloud.debian.org/images/cloud/
 

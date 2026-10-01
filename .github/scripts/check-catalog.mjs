@@ -33,7 +33,9 @@ for (const s of data.scripts) {
   for (const [key, v] of [["cpu", "var_cpu"], ["ram", "var_ram"], ["disk", "var_disk"]]) {
     if (String(s.resources?.[key]) !== get(v)) errors.push(`${where} ${key} is ${s.resources?.[key]} on the site but ${get(v)} in ${script}`);
   }
-  if (String(s.port ?? "") !== (get("var_port") ?? "") && s.proto !== "minecraft" && s.proto !== "mysql" && s.proto !== "postgresql") {
+  // Only web ports are printed by the script; database, MQTT and game ports are listed on the site only.
+  const web = !s.proto || /^https?$/.test(s.proto);
+  if (web && String(s.port ?? "") !== (get("var_port") ?? "")) {
     errors.push(`${where} port is ${s.port} on the site but ${get("var_port")} in ${script}`);
   }
   const hasFlag = (f) => (s.flags || []).includes(f);

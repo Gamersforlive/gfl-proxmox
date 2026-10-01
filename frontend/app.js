@@ -27,7 +27,7 @@
   // no logo, or when it fails to load (see the error listener below).
   const icon = (s) =>
     `<span class="mono-icon" data-initials="${esc(initials(s.name))}" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">` +
-    (s.icon ? `<img class="app-logo" src="${esc(s.icon)}" alt="" loading="lazy" decoding="async">` : esc(initials(s.name))) +
+    (s.icon ? `<img class="app-logo" src="${esc(s.icon)}" alt="" decoding="async">` : esc(initials(s.name))) +
     `</span>`;
   const typeTag = (s) => `<span class="tag tag-${s.type}">${TYPE_LABEL[s.type]}</span>`;
   const cmdBox = (text, live = false) =>
@@ -158,10 +158,19 @@
             ${s.type === "ct" ? `<a class="btn" href="${esc(sourceUrl(`install/${s.slug}-install.sh`))}" target="_blank" rel="noopener">Installer source ↗</a>` : ""}
             <a class="btn" href="https://discord.gamersforlive.com" target="_blank" rel="noopener">Get help on Discord ↗</a>
           </div>
+          ${scriptPager(s)}
         </article>
       </div>`;
     document.title = `${s.name} · GFL Proxmox Scripts`;
     if (CFG.fieldsFor(s)) CFG.refresh(app, s, cfgValues(s), command(s));
+  }
+
+  function scriptPager(s) {
+    const { prev, next } = neighbours(s.slug);
+    const link = (x, label, right) =>
+      x ? `<a href="#${x.slug}" class="pager-app${right ? " right" : ""}">${right ? "" : icon(x)}<span><small>${label}</small>${esc(x.name)}</span>${right ? icon(x) : ""}</a>` : "<span></span>";
+    return `<nav class="pager" aria-label="More scripts">${link(prev, "Previous", false)}${link(next, "Next", true)}</nav>
+      <p class="hint pager-tip">Tip: use the <kbd>←</kbd> and <kbd>→</kbd> keys to flip through the scripts.</p>`;
   }
 
   // Quick install (defaults) or Custom settings (a form that builds the command).
@@ -255,14 +264,56 @@
   }
 
   // ---------- routing ----------
+  // Pages swap with a short cross-fade (View Transitions API where the browser has it).
+  // The sidebar keeps its scroll position between pages of the same kind, and the
+  // catalog returns to where you were when you come back to it.
+  const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function swap(update) {
+    if (!document.startViewTransition || reducedMotion()) return update();
+    document.startViewTransition(update);
+  }
+
+  state.scroll = {};
+  state.rail = {};
+  state.view = null;
+
   function route() {
     const id = decodeURIComponent(location.hash.replace(/^#/, ""));
     const doc = state.docs.find((d) => d.id === id);
     const script = state.data.scripts.find((s) => s.slug === id);
-    document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === (doc ? "docs" : "scripts")));
-    if (doc) renderDoc(doc);
-    else if (script) renderScript(script);
-    else { renderHome(); document.title = "GFL Proxmox Scripts"; }
+    const view = doc ? "doc" : script ? "script" : "home";
+
+    // Remember where the page we're leaving was scrolled to.
+    if (state.view) {
+      state.scroll[state.view.key] = window.scrollY;
+      const rail = $(".rail", app);
+      if (rail) state.rail[state.view.kind] = rail.scrollTop;
+    }
+    state.view = { kind: view, key: view === "home" ? "home" : id };
+
+    swap(() => {
+      document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === (doc ? "docs" : "scripts")));
+      if (doc) renderDoc(doc);
+      else if (script) renderScript(script);
+      else { renderHome(); document.title = "GFL Proxmox Scripts"; }
+
+      const rail = $(".rail", app);
+      if (rail) {
+        rail.scrollTop = state.rail[view] || 0;
+        const on = rail.querySelector(".on");
+        if (on) {
+          const r = rail.getBoundingClientRect(), o = on.getBoundingClientRect();
+          if (o.top < r.top || o.bottom > r.bottom) rail.scrollTop += o.top - r.top - r.height / 2;
+        }
+      }
+      window.scrollTo({ top: view === "home" ? state.scroll.home || 0 : 0, behavior: "instant" });
+    });
+  }
+
+  // Previous / next app in catalog order, for the pager and the arrow keys.
+  function neighbours(slug) {
+    const list = state.data.scripts, i = list.findIndex((s) => s.slug === slug);
+    return { prev: list[i - 1], next: list[i + 1] };
   }
 
   function toast(msg) {
@@ -304,7 +355,7 @@
       return;
     }
     const cat = e.target.closest("[data-cat]");
-    if (cat) { state.cat = cat.dataset.cat; renderHome(); return; }
+    if (cat) { state.cat = cat.dataset.cat; swap(renderHome); return; }
     if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; renderHome(); }
   });
 
@@ -329,8 +380,17 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && !/input|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); $("#q").focus(); }
     if (e.key === "Escape" && document.activeElement === $("#q")) { $("#q").value = ""; state.q = ""; renderHome(); }
+    // Arrow keys flip through scripts, unless you're typing or using a modifier.
+    if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey &&
+        !/input|textarea|select/i.test(document.activeElement.tagName)) {
+      const s = currentScript();
+      if (!s) return;
+      const { prev, next } = neighbours(s.slug);
+      const to = e.key === "ArrowLeft" ? prev : next;
+      if (to) location.hash = to.slug;
+    }
   });
-  window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", route);
 
   fetch("data/scripts.json")
     .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
