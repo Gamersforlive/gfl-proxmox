@@ -67,5 +67,8 @@ The website deploys to GitHub Pages from `frontend/` on every push to `main`
 Get help, share your setup and suggest new apps on the [GamersForLive Discord](https://discord.gamersforlive.com).
 Bugs and pull requests are welcome on GitHub.
 
+App logos in `frontend/icons/` come from [dashboard-icons](https://github.com/homarr-labs/dashboard-icons)
+(Apache-2.0); each logo is a trademark of its project.
+
 Inspired by the [community-scripts ProxmoxVE](https://github.com/community-scripts/ProxmoxVE) project.
 Not affiliated with Proxmox Server Solutions GmbH. MIT licensed.

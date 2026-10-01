@@ -18,6 +18,7 @@ for (const s of data.scripts) {
   if (!cats.has(s.category)) errors.push(`${where} unknown category "${s.category}"`);
   for (const key of ["name", "summary", "description", "website", "docs"]) if (!s[key]) errors.push(`${where} missing "${key}"`);
 
+  if (s.icon && !existsSync(join(root, "frontend", s.icon))) errors.push(`${where} icon frontend/${s.icon} does not exist`);
   const script = s.script || `ct/${s.slug}.sh`;
   if (!existsSync(join(root, script))) { errors.push(`${where} ${script} does not exist`); continue; }
   if (s.type !== "ct") continue;

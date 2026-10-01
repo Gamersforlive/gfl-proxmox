@@ -23,8 +23,11 @@
   const initials = (name) => name.replace(/\(.*\)/, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   const ram = (mib) => (mib >= 1024 ? `${+(mib / 1024).toFixed(1)} GiB` : `${mib} MiB`);
 
+  // The app's logo on a tile tinted with its category color; the initials show if the logo fails to load.
   const icon = (s) =>
-    `<span class="mono-icon" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">${esc(initials(s.name))}</span>`;
+    `<span class="mono-icon" style="background:linear-gradient(135deg, ${CAT_COLORS[s.category]}33, ${CAT_COLORS[s.category]}11);border-color:${CAT_COLORS[s.category]}55;color:${CAT_COLORS[s.category]}">${esc(initials(s.name))}` +
+    (s.icon ? `<img class="app-logo" src="${esc(s.icon)}" alt="" loading="lazy" decoding="async">` : "") +
+    `</span>`;
   const typeTag = (s) => `<span class="tag tag-${s.type}">${TYPE_LABEL[s.type]}</span>`;
   const cmdBox = (text, live = false) =>
     `<div class="cmd"${live ? " data-cmd" : ""}><code>${esc(text)}</code><button class="copy" type="button" data-copy="${esc(text)}" aria-label="Copy command">` +
@@ -303,6 +306,9 @@
     if (cat) { state.cat = cat.dataset.cat; renderHome(); return; }
     if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; renderHome(); }
   });
+
+  // A logo that fails to load is removed, uncovering the initials behind it.
+  document.addEventListener("error", (e) => { if (e.target.classList?.contains("app-logo")) e.target.remove(); }, true);
 
   app.addEventListener("input", onConfigInput);
   app.addEventListener("change", onConfigInput);
