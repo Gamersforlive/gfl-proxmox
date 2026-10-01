@@ -202,6 +202,15 @@ EOF
     systemctl daemon-reload
     systemctl restart "$(basename "$(readlink -f /etc/systemd/system/getty.target.wants/container-getty@1.service 2>/dev/null || echo container-getty@1.service)")" 2>/dev/null || true
   fi
+  # Read by the host tools (GFL status, Update all GFL apps).
+  cat >/etc/gfl-app <<EOF
+GFL_APP="${APP}"
+GFL_SLUG="${NSAPP}"
+GFL_PORT="${APP_PORT:-}"
+GFL_PROTO="${APP_PROTO:-http}"
+GFL_PATH="${APP_PATH:-}"
+GFL_INSTALLED="$(date +%F)"
+EOF
   cat >/usr/bin/update <<EOF
 #!/usr/bin/env bash
 export GFL_RAW="${GFL_RAW}"

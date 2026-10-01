@@ -448,6 +448,20 @@
       "notes": ["Safe to run again. Answer No to any step you want to skip."]
     },
     {
+      "slug": "gfl-status", "icon": "icons/proxmox.svg", "name": "GFL status", "type": "tool", "category": "tools", "script": "tools/gfl-status.sh",
+      "summary": "See every GFL app on this host: status, address and pending updates.",
+      "description": "Lists every container made with these scripts in one table: its app, whether it's running, the address to open it and how many OS updates are waiting. It only reads; nothing is changed.",
+      "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html",
+      "notes": ["Containers are recognised by the gfl tag the scripts add.", "Update counts come from each container's last package-list refresh, so they can lag a little."]
+    },
+    {
+      "slug": "update-gfl-apps", "icon": "icons/proxmox.svg", "name": "Update all GFL apps", "type": "tool", "category": "tools", "script": "tools/update-gfl-apps.sh",
+      "summary": "Update every GFL app the right way, with a snapshot first if you like.",
+      "description": "Runs each container's own update command, so every app is updated the way it should be (apt, Docker images, new releases). It can take a Proxmox snapshot of each container first, so a bad update rolls back in one click.",
+      "website": "https://pve.proxmox.com/wiki/Linux_Container#pct_snapshot", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html",
+      "notes": ["Run it from cron for automatic updates: GFL_MODE=default SNAPSHOT=yes bash -c \"$(curl -fsSL .../tools/update-gfl-apps.sh)\"", "Snapshots need storage that supports them, such as LVM-thin or ZFS. Remove old snapshots once you're happy with the update."]
+    },
+    {
       "slug": "update-lxcs", "icon": "icons/proxmox.svg", "name": "Update all containers", "type": "tool", "category": "tools", "script": "tools/update-lxcs.sh",
       "summary": "Update the OS packages in every running container at once.",
       "description": "Lists your running containers, lets you untick any you want to skip, then updates Debian, Ubuntu and Alpine containers one by one. At the end it tells you which ones want a reboot.",
