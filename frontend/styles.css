@@ -41,6 +41,9 @@ a:hover { color: #67e8f9; }
 h1, h2, h3, h4 { font-family: var(--display); letter-spacing: 0.01em; line-height: 1.15; text-wrap: balance; margin: 0; }
 code, pre, kbd { font-family: var(--mono); }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+/* No blinking text cursor on plain text (Chrome's caret browsing, F7); only where you can type. */
+body { caret-color: transparent; }
+input, textarea, select, [contenteditable="true"] { caret-color: var(--cyan); }
 ::selection { background: rgba(168, 85, 247, 0.4); }
 
 /* ---------- top bar ---------- */
@@ -190,6 +193,7 @@ code, pre, kbd { font-family: var(--mono); }
 .tag-ct { background: rgba(34, 211, 238, 0.14); color: var(--cyan); }
 .tag-vm { background: rgba(168, 85, 247, 0.18); color: #c99bfa; }
 .tag-tool { background: rgba(251, 191, 36, 0.14); color: var(--amber); }
+.tag-bundle { background: rgba(52, 211, 153, 0.15); color: var(--green); }
 .tag-flag { background: var(--panel2); color: #c9c9dc; }
 .card .tag { margin-left: auto; }
 .empty { padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }

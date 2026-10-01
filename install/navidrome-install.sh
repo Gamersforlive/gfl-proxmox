@@ -17,14 +17,18 @@ rm -f /tmp/navidrome.deb
 msg_ok "Installed Navidrome ${VER}"
 
 msg_info "Configuring Navidrome"
-mkdir -p /data/media/music /etc/navidrome /var/lib/navidrome
+mkdir -p /etc/navidrome /var/lib/navidrome
+prep_media_dirs /data /data/media /data/media/music
 cat >/etc/navidrome/navidrome.toml <<'TOML'
 MusicFolder = "/data/media/music"
 DataFolder = "/var/lib/navidrome"
 Address = "0.0.0.0"
 Port = 4533
 TOML
-if id -u navidrome >/dev/null 2>&1; then chown -R navidrome:navidrome /var/lib/navidrome /data/media/music; fi
+if id -u navidrome >/dev/null 2>&1; then
+  chown -R navidrome:navidrome /var/lib/navidrome
+  join_media_group navidrome
+fi
 systemctl enable -q navidrome
 systemctl restart navidrome
 msg_ok "Navidrome listens on port 4533"

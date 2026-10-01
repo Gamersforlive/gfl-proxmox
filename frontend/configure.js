@@ -106,7 +106,28 @@ window.GFL_CONFIG = (() => {
     ];
   }
 
+  function bundleFields() {
+    const app = (k, label, def, hint) => f(k, label, "switch", { def, on: "yes", off: "no", hint });
+    return [
+      { group: "Apps", fields: [
+        app("b_qbittorrent", "qBittorrent", "yes", "Downloads"), app("b_prowlarr", "Prowlarr", "yes", "Indexers"),
+        app("b_flaresolverr", "FlareSolverr", "yes", "Cloudflare checks"), app("b_radarr", "Radarr", "yes", "Movies"),
+        app("b_sonarr", "Sonarr", "yes", "TV shows"), app("b_jellyfin", "Jellyfin", "yes", "Watching"),
+        app("b_seerr", "Seerr", "yes", "Requests (needs Jellyfin)"), app("b_lidarr", "Lidarr", "no", "Music")
+      ] },
+      { group: "Storage and login", fields: [
+        f("DATA", "Media folder on the host", "text", { def: "/mnt/gfl/media-data", req: true, hint: "Downloads and library; a NAS share like /mnt/gfl/nas-media works too",
+          check: (v) => /^\/[A-Za-z0-9._\/-]+$/.test(v) ? null : "An absolute path like /mnt/gfl/media-data" }),
+        f("APP_USER", "Login name for every app", "text", { def: "admin", req: true, hint: "The password is asked in the terminal",
+          check: (v) => /^[A-Za-z0-9._-]{2,32}$/.test(v) ? null : "Letters, numbers, dots, dashes, underscores" }),
+        f("GFL_STORAGE", "Container disk storage", "text", { ph: "ask if several", check: (v) => !v || /^[A-Za-z0-9._-]+$/.test(v) ? null : "A storage name" })
+      ] }
+    ];
+  }
+  const BUNDLE_APPS = ["qbittorrent", "prowlarr", "flaresolverr", "radarr", "sonarr", "jellyfin", "seerr", "lidarr"];
+
   function toolFields(s) {
+    if (s.type === "bundle") return bundleFields();
     if (s.slug === "host-backup") return [{ group: "Backup", fields: [
       f("DEST", "Backup folder", "text", { ph: "ask in the terminal", hint: "For example /mnt/pve/nas/host-backups", check: (v) => !v || /^\/[A-Za-z0-9._\/-]*$/.test(v) ? null : "An absolute path like /mnt/pve/nas" }),
       f("KEEP", "Backups to keep", "number", { def: "10", req: true, check: intIn(1, 1000) })
@@ -143,7 +164,7 @@ window.GFL_CONFIG = (() => {
       if (x.req && val === "") out[x.k] = "Required";
       else if (x.check && val !== "") { const e = x.check(val, v); if (e) out[x.k] = e; }
     }
-    return out;
+    return { ...out, ...bundleCheck(s, v) };
   }
 
   function env(s, v) {
@@ -171,6 +192,13 @@ window.GFL_CONFIG = (() => {
       for (const k of ["NAME", "CIUSER", "CORES", "RAM", "DISK", "BRG"]) if (k in d && changed(k)) put(k, v[k]);
       if (v.ipv4 === "static") { put("NET", v.NET); put("GATE", v.GATE); }
       for (const k of ["VLAN", "NS", "GFL_STORAGE"]) put(k, v[k]);
+    } else if (s.type === "bundle") {
+      const picked = BUNDLE_APPS.filter((a) => v["b_" + a] === "yes");
+      const def = BUNDLE_APPS.filter((a) => d["b_" + a] === "yes");
+      if (picked.join(" ") !== def.join(" ")) put("APPS", picked.join(" "));
+      if (changed("DATA")) put("DATA", v.DATA);
+      if (changed("APP_USER")) put("APP_USER", v.APP_USER);
+      put("GFL_STORAGE", v.GFL_STORAGE);
     } else {
       put("DEST", v.DEST);
       if ("KEEP" in d && changed("KEEP")) put("KEEP", v.KEEP);
@@ -178,6 +206,14 @@ window.GFL_CONFIG = (() => {
     }
     return e;
   }
+
+  // A bundle needs at least one app; Seerr can only sign in through Jellyfin.
+  const bundleCheck = (s, v) => {
+    if (s.type !== "bundle") return {};
+    if (!BUNDLE_APPS.some((a) => v["b_" + a] === "yes")) return { b_qbittorrent: "Pick at least one app" };
+    if (v.b_seerr === "yes" && v.b_jellyfin !== "yes") return { b_seerr: "Seerr needs Jellyfin" };
+    return {};
+  };
 
   const quote = (val) => (/^[A-Za-z0-9._\/:@%+=,-]+$/.test(val) ? val : `'${val}'`);
 
@@ -210,7 +246,7 @@ window.GFL_CONFIG = (() => {
       return `<div class="field field-switch" data-field="${x.k}"><label class="switch" for="${id}">
         <input type="checkbox" id="${id}" data-k="${x.k}" data-on="${on}" data-off="${x.off ?? "0"}"${val === on ? " checked" : ""}>
         <span class="track" aria-hidden="true"></span><span>${esc(x.label)}</span></label>
-        ${x.hint ? `<small class="fhint">${esc(x.hint)}</small>` : ""}</div>`;
+        <small class="fhint" data-msg="${x.k}">${esc(x.hint || "")}</small></div>`;
     } else {
       input = `<input id="${id}" data-k="${x.k}" type="text" ${x.type === "number" ? 'inputmode="numeric"' : ""} value="${esc(val)}" placeholder="${esc(x.ph || "")}" autocomplete="off" spellcheck="false">`;
     }

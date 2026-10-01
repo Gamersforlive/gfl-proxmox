@@ -425,7 +425,8 @@ build_container() {
 
   if ! pct exec "$CT_ID" -- env \
     APP="$APP" NSAPP="$NSAPP" VERBOSE="$VERBOSE" GFL_RAW="$GFL_RAW" GFL_SITE="$GFL_SITE" \
-    CTTYPE="$CT_TYPE" GPU="$GPU" SSH_ROOT="$SSH" NETMOUNT="$NETMOUNT" PASSWORD_SET="$([ -n "$PW" ] && echo yes || echo no)" \
+    CTTYPE="$CT_TYPE" GPU="$GPU" SSH_ROOT="$SSH" NETMOUNT="$NETMOUNT" \
+    GFL_APP_USER="${GFL_APP_USER:-}" GFL_APP_PASS="${GFL_APP_PASS:-}" PASSWORD_SET="$([ -n "$PW" ] && echo yes || echo no)" \
     TERM="${TERM:-xterm}" ${GFL_EXTRA_ENV[@]+"${GFL_EXTRA_ENV[@]}"} bash /opt/gfl/install.sh; then
     msg_error "The ${APP} installer failed inside container ${CT_ID}."
     echo -e "${INFO} The container is left running so you can look around: ${BL}pct enter ${CT_ID}${CL}"

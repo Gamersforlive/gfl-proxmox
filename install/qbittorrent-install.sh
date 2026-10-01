@@ -12,13 +12,13 @@ msg_info "Installing qBittorrent (web UI only)"
 $STD apt-get install -y qbittorrent-nox python3
 getent group media >/dev/null || groupadd -g 1000 media
 id -u qbittorrent >/dev/null 2>&1 || useradd -r -m -g media -d /var/lib/qbittorrent -s /usr/sbin/nologin qbittorrent
-mkdir -p /data/downloads/complete /data/downloads/incomplete
-chgrp -R media /data
-chmod -R 775 /data
+prep_media_dirs /data /data/downloads /data/downloads/complete /data/downloads/incomplete
 msg_ok "Installed qBittorrent"
 
 msg_info "Setting the web UI login"
-PASS=$(gen_pw)
+# Bundles pass one shared login for every app; otherwise generate a password.
+QB_USER="${GFL_APP_USER:-admin}"
+PASS="${GFL_APP_PASS:-$(gen_pw)}"
 HASH=$(python3 -c '
 import base64, hashlib, os, sys
 salt = os.urandom(16)
@@ -38,11 +38,11 @@ Session\TempPathEnabled=true
 
 [Preferences]
 WebUI\Port=8090
-WebUI\Username=admin
+WebUI\Username=${QB_USER}
 WebUI\Password_PBKDF2="${HASH}"
 CONFIG
 chown -R qbittorrent:media /var/lib/qbittorrent
-save_creds "qBittorrent web UI" "user: admin" "password: ${PASS}"
+save_creds "qBittorrent web UI" "user: ${QB_USER}" "password: ${PASS}"
 msg_ok "Saved the login to /root/qbittorrent.creds"
 
 msg_info "Creating the qBittorrent service"

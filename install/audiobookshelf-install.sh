@@ -14,7 +14,8 @@ msg_ok "Added the Audiobookshelf repository"
 
 msg_info "Installing Audiobookshelf"
 $STD apt-get install -y audiobookshelf
-mkdir -p /data/media/audiobooks /data/media/podcasts
+prep_media_dirs /data /data/media /data/media/audiobooks /data/media/podcasts
+join_media_group audiobookshelf 2>/dev/null || true
 systemctl enable -q --now audiobookshelf
 msg_ok "Installed Audiobookshelf"
 

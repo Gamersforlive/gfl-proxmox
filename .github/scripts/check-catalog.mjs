@@ -43,7 +43,7 @@ for (const s of data.scripts) {
   if (hasFlag("gpu") !== (get("var_gpu") === "yes")) errors.push(`${where} gpu flag does not match var_gpu`);
 }
 
-for (const [dir, suffix] of [["ct", ".sh"], ["vm", ".sh"], ["tools", ".sh"]]) {
+for (const [dir, suffix] of [["ct", ".sh"], ["vm", ".sh"], ["tools", ".sh"], ["bundles", ".sh"]]) {
   for (const f of readdirSync(join(root, dir)).filter((f) => f.endsWith(suffix))) {
     const path = `${dir}/${f}`;
     if (!data.scripts.some((s) => (s.script || `ct/${s.slug}.sh`) === path)) errors.push(`${path} is not in frontend/data/scripts.json`);

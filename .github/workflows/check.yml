@@ -10,8 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax
-        run: for f in misc/*.func ct/*.sh install/*.sh vm/*.sh tools/*.sh; do bash -n "$f"; done
+        run: for f in misc/*.func ct/*.sh install/*.sh vm/*.sh tools/*.sh bundles/*.sh; do bash -n "$f"; done
       - name: ShellCheck
-        run: shellcheck -s bash -S warning -e SC1090,SC1091,SC2034,SC2154 misc/*.func ct/*.sh install/*.sh vm/*.sh tools/*.sh
+        run: shellcheck -s bash -S warning -e SC1090,SC1091,SC2034,SC2154 misc/*.func ct/*.sh install/*.sh vm/*.sh tools/*.sh bundles/*.sh
       - name: Catalog matches the scripts
         run: node .github/scripts/check-catalog.mjs

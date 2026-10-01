@@ -25,8 +25,9 @@ msg_ok "Installed Plex Media Server ${VER}"
 install_gpu_drivers plex
 if [ "${GPU:-no}" = "yes" ]; then systemctl restart plexmediaserver; fi
 
-mkdir -p /data/media/movies /data/media/tv
-chown -R plex:plex /data/media
+join_media_group plex
+prep_media_dirs /data /data/media /data/media/movies /data/media/tv /data/media/music
+systemctl restart plexmediaserver
 
 motd_ssh
 customize

@@ -2,6 +2,7 @@
   "rawBase": "https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main",
   "repo": "https://github.com/gamersforlive/gfl-proxmox",
   "categories": [
+    { "id": "bundles", "name": "Bundles" },
     { "id": "docker", "name": "Docker & containers" },
     { "id": "media", "name": "Media & downloads" },
     { "id": "network", "name": "Network & DNS" },
@@ -16,6 +17,15 @@
     { "id": "tools", "name": "Proxmox host tools" }
   ],
   "scripts": [
+    {
+      "slug": "media-stack", "icon": "icons/jellyfin.svg", "name": "Media bundle", "type": "bundle", "category": "bundles", "script": "bundles/media-stack.sh",
+      "summary": "A complete movies & TV setup in one go, every app already connected.",
+      "website": "https://wiki.servarr.com", "docs": "https://trash-guides.info/Hardlinks/How-to-setup-for/Proxmox/",
+      "description": "Creates qBittorrent, Prowlarr, FlareSolverr, Radarr, Sonarr, Jellyfin and Seerr (Lidarr optional), each in its own container, on one shared media folder. Then it connects them through their APIs: one login everywhere, qBittorrent as the download client, library folders, Prowlarr syncing indexers to Radarr and Sonarr through FlareSolverr, the Jellyfin wizard and libraries, and Seerr signed in with Jellyfin and sending requests to Radarr and Sonarr. The only thing left for you is adding indexers in Prowlarr.",
+      "resources": { "cpu": 12, "ram": 10240, "disk": 72 },
+      "login": "The user name and password you choose at the start, in every app. Seerr uses your Jellyfin login.",
+      "notes": ["Downloads and the library share one folder, so finished downloads are hardlinked into the library instantly instead of copied.", "Point the media folder at a big disk, or at a NAS share mounted with the 'Mount a NAS share into containers' tool first.", "Run the bundle again any time: it reuses the containers it finds and only adds missing connections.", "Next step: open Prowlarr and add your indexers. They appear in Radarr and Sonarr automatically."]
+    },
     {
       "slug": "docker", "icon": "icons/docker.svg", "name": "Docker", "type": "ct", "category": "docker",
       "summary": "Docker Engine and the compose plugin in a lightweight container.",

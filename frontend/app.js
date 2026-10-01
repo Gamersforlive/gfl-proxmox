@@ -13,7 +13,7 @@
     docker: "#2496ed", media: "#a855f7", network: "#22d3ee", security: "#34d399", monitoring: "#fbbf24",
     ai: "#f472b6", gaming: "#84cc16", database: "#60a5fa", vm: "#c084fc", tools: "#f59e0b"
   };
-  const TYPE_LABEL = { ct: "LXC", vm: "VM", tool: "Tool" };
+  const TYPE_LABEL = { ct: "LXC", vm: "VM", tool: "Tool", bundle: "Bundle" };
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const scriptPath = (s) => s.script || `ct/${s.slug}.sh`;
@@ -139,15 +139,21 @@
     const r = s.resources || {};
     const flags = (s.flags || []).map((f) => `<span class="tag tag-flag">${f === "gpu" ? "GPU ready" : f === "docker" ? "Docker" : esc(f)}</span>`).join("");
     const url = s.port ? (s.proto && !/^https?$/.test(s.proto) ? `${s.proto}://<container-ip>:${s.port}` : `${s.proto || "http"}://<container-ip>:${s.port}`) : null;
-    const where = s.type === "tool" ? "Run this in the Proxmox host shell. It asks before changing anything." : s.type === "vm" ? "Run this in the Proxmox host shell. It creates a new virtual machine." : "Run this in the Proxmox host shell. It creates a new container.";
+    const where = {
+      tool: "Run this in the Proxmox host shell. It asks before changing anything.",
+      vm: "Run this in the Proxmox host shell. It creates a new virtual machine.",
+      bundle: "Run this in the Proxmox host shell. It creates one container per app and connects them; it takes 10 to 20 minutes.",
+      ct: "Run this in the Proxmox host shell. It creates a new container."
+    }[s.type];
+    const bundle = s.type === "bundle";
 
     const resourcesPanel = s.type === "tool" ? "" : `
       <div class="panel"><h2>Default settings</h2><dl class="kv">
-        <dt>Type</dt><dd>${s.type === "ct" ? "Unprivileged LXC container" : "Virtual machine"}</dd>
-        <dt>OS</dt><dd>${esc(r.os || (s.type === "ct" ? "Debian 13" : "Debian 13 cloud image"))}</dd>
-        <dt>CPU</dt><dd class="m">${r.cpu} ${r.cpu === 1 ? "core" : "cores"}</dd>
-        <dt>Memory</dt><dd class="m">${ram(r.ram)} (${r.ram} MiB)</dd>
-        <dt>Disk</dt><dd class="m">${r.disk} GB</dd>
+        <dt>Type</dt><dd>${bundle ? "One unprivileged LXC container per app" : s.type === "ct" ? "Unprivileged LXC container" : "Virtual machine"}</dd>
+        <dt>OS</dt><dd>${esc(r.os || (s.type === "vm" ? "Debian 13 cloud image" : "Debian 13"))}</dd>
+        <dt>CPU</dt><dd class="m">${r.cpu} ${r.cpu === 1 ? "core" : "cores"}${bundle ? " in total" : ""}</dd>
+        <dt>Memory</dt><dd class="m">${ram(r.ram)} (${r.ram} MiB)${bundle ? " in total" : ""}</dd>
+        <dt>Disk</dt><dd class="m">${r.disk} GB${bundle ? " in total, plus your media folder" : ""}</dd>
         ${s.port ? `<dt>Port</dt><dd class="m">${s.port}</dd>` : ""}
       </dl><p class="hint">Change any of these under <button type="button" class="linkish" data-mode="custom">Custom settings</button> above.</p></div>`;
 
@@ -155,7 +161,7 @@
       <div class="panel"><h2>After install</h2><dl class="kv">
         ${url ? `<dt>Open</dt><dd class="m">${esc(url)}</dd>` : ""}
         <dt>Login</dt><dd>${esc(s.login || "No login needed")}</dd>
-        <dt>Update</dt><dd>${s.type === "ct" ? "run update in the container console" : "from inside the VM"}</dd>
+        <dt>Update</dt><dd>${s.type === "ct" ? "run update in the container console" : bundle ? "run update in each app's container, or use Update all GFL apps" : "from inside the VM"}</dd>
       </dl></div>`;
 
     app.innerHTML = `

@@ -28,8 +28,9 @@ if [ "${GPU:-no}" = "yes" ]; then
   msg_ok "Installed GPU drivers (check them with: vainfo)"
 fi
 
-mkdir -p /data/media/movies /data/media/tv
-chown -R jellyfin:jellyfin /data/media
+join_media_group jellyfin
+prep_media_dirs /data /data/media /data/media/movies /data/media/tv /data/media/music
+systemctl restart jellyfin
 
 motd_ssh
 customize

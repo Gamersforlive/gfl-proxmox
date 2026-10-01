@@ -81,6 +81,29 @@ install_docker() {
   msg_ok "Installed Docker $(docker version --format '{{.Server.Version}}')"
 }
 
+# The shared "media" group (gid 1000) lets every media app read and write the same /data
+# folder, even when several containers share it. join_media_group <user>...
+join_media_group() {
+  getent group media >/dev/null || groupadd -g 1000 media
+  local u
+  for u in "$@"; do usermod -aG media "$u"; done
+}
+
+# Creates media folders under /data without touching existing ones. Never recursive, and
+# errors are ignored: /data may be a shared folder or an SMB/NFS mount owned by the host.
+# prep_media_dirs <dir>...
+prep_media_dirs() {
+  getent group media >/dev/null || groupadd -g 1000 media
+  local d
+  for d in "$@"; do
+    if [ ! -d "$d" ]; then
+      mkdir -p "$d" 2>/dev/null || continue
+      chgrp media "$d" 2>/dev/null || true
+      chmod 2775 "$d" 2>/dev/null || true
+    fi
+  done
+}
+
 # Radarr, Sonarr and Prowlarr share one install shape.
 # install_servarr <slug> <Name> <port> <tarball-url>
 install_servarr() {
@@ -93,11 +116,10 @@ install_servarr() {
   msg_info "Installing ${name}"
   getent group media >/dev/null || groupadd -g 1000 media
   id -u "$slug" >/dev/null 2>&1 || useradd -r -g media -d "/var/lib/${slug}" -s /usr/sbin/nologin "$slug"
-  mkdir -p "/var/lib/${slug}" /data/media /data/downloads
+  mkdir -p "/var/lib/${slug}"
+  prep_media_dirs /data /data/media /data/downloads
   fetch "$url" | tar -xz -C /opt
   chown -R "${slug}:media" "/opt/${name}" "/var/lib/${slug}"
-  chgrp media /data /data/media /data/downloads
-  chmod 775 /data /data/media /data/downloads
   cat >"/etc/systemd/system/${slug}.service" <<EOF
 [Unit]
 Description=${name}
