@@ -52,11 +52,9 @@
   function renderHome() {
     const { scripts, categories } = state.data;
     const count = (t) => scripts.filter((s) => s.type === t).length;
-    const list = scripts.filter(matches);
     const cats = [{ id: "all", name: "All scripts" }, ...categories];
     const n = (id) => (id === "all" ? scripts.length : scripts.filter((s) => s.category === id).length);
     const catBtn = (c, cls) => `<button type="button" class="${cls}${state.cat === c.id ? " on" : ""}" data-cat="${c.id}">${esc(c.name)}${cls ? "" : `<span class="count">${n(c.id)}</span>`}</button>`;
-    const heading = state.q ? `Results for “${esc(state.q)}”` : state.cat === "all" ? "All scripts" : esc(catName(state.cat));
 
     app.innerHTML = `
       <section class="hero">
@@ -95,12 +93,37 @@
           <h4>Docs</h4>
           ${state.docs.slice(0, 5).map((d) => `<a href="#${d.id}">${esc(d.title)}</a>`).join("")}
         </aside>
-        <section aria-label="Scripts">
+        <section aria-label="Scripts" data-catalog>
           <div class="chips">${cats.map((c) => catBtn(c, "chip")).join("")}</div>
-          <div class="section-head"><h2>${heading}</h2><p>${list.length} of ${scripts.length} scripts</p></div>
-          ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">Nothing matches “${esc(state.q)}”. Try a shorter word, or <button class="chip" type="button" data-clear>show everything</button></div>`}
+          <div data-results>${catalogResults()}</div>
         </section>
       </div>`;
+  }
+
+  function catalogResults() {
+    const { scripts } = state.data;
+    const list = scripts.filter(matches);
+    const heading = state.q ? `Results for “${esc(state.q)}”` : state.cat === "all" ? "All scripts" : esc(catName(state.cat));
+    return `<div class="section-head"><h2>${heading}</h2><p>${list.length} of ${scripts.length} scripts</p></div>
+      ${list.length ? `<div class="grid">${list.map(card).join("")}</div>` : `<div class="empty">Nothing matches “${esc(state.q)}”. Try a shorter word, or <button class="chip" type="button" data-clear>show everything</button></div>`}`;
+  }
+
+  // Filtering (a category or a search) only swaps the cards. The hero and the sidebar stay
+  // put, and the page keeps its height so the scroll position never jumps.
+  function updateCatalog() {
+    const results = $("[data-results]", app);
+    if (!results) return renderHome();
+    app.querySelectorAll("[data-cat]").forEach((b) => b.classList.toggle("on", b.dataset.cat === state.cat));
+    const section = $("[data-catalog]", app);
+    section.style.minHeight = "";
+    const y = window.scrollY;
+    results.innerHTML = catalogResults();
+    const grid = $(".grid", results);
+    if (grid && !reducedMotion()) grid.classList.add("fade-in");
+    // A shorter list would shrink the page and pull everything up; pad it instead.
+    const missing = y + window.innerHeight - document.documentElement.scrollHeight;
+    if (missing > 0) section.style.minHeight = `${section.offsetHeight + missing}px`;
+    window.scrollTo({ top: y, behavior: "instant" });
   }
 
   function card(s) {
@@ -355,8 +378,8 @@
       return;
     }
     const cat = e.target.closest("[data-cat]");
-    if (cat) { state.cat = cat.dataset.cat; swap(renderHome); return; }
-    if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; renderHome(); }
+    if (cat) { state.cat = cat.dataset.cat; updateCatalog(); return; }
+    if (e.target.closest("[data-clear]")) { state.q = ""; state.cat = "all"; $("#q").value = ""; updateCatalog(); }
   });
 
   // A logo that fails to load is swapped for the app's initials.
@@ -374,12 +397,17 @@
   $("#q").addEventListener("input", (e) => {
     state.q = e.target.value.trim();
     if (state.q) state.cat = "all";
+    if (state.view && state.view.kind === "home") return updateCatalog();
+    // Searching from another page: go to the catalog first.
     if (location.hash && location.hash !== "#") history.replaceState(null, "", location.pathname + location.search);
+    state.view = { kind: "home", key: "home" };
+    document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === "scripts"));
     renderHome();
+    document.title = "GFL Proxmox Scripts";
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && !/input|textarea/i.test(document.activeElement.tagName)) { e.preventDefault(); $("#q").focus(); }
-    if (e.key === "Escape" && document.activeElement === $("#q")) { $("#q").value = ""; state.q = ""; renderHome(); }
+    if (e.key === "Escape" && document.activeElement === $("#q")) { $("#q").value = ""; state.q = ""; updateCatalog(); }
     // Arrow keys flip through scripts, unless you're typing or using a modifier.
     if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey &&
         !/input|textarea|select/i.test(document.activeElement.tagName)) {

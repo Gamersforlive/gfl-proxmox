@@ -333,11 +333,15 @@ code, pre, kbd { font-family: var(--mono); }
 /* page transitions: the bar and sidebar stay put, the content cross-fades */
 .topbar { view-transition-name: topbar; }
 .rail { view-transition-name: rail; }
-::view-transition-old(root) { animation: vt-out 0.14s ease-in both; }
-::view-transition-new(root) { animation: vt-in 0.2s ease-out both; }
-::view-transition-group(rail), ::view-transition-group(topbar) { animation-duration: 0.14s; }
-@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
-@keyframes vt-in { from { opacity: 0; transform: translateY(6px); } }
+/* A plain cross-fade: no sliding, so nothing appears to move up or down. */
+::view-transition-old(root) { animation: vt-fade 0.12s ease-in both reverse; }
+::view-transition-new(root) { animation: vt-fade 0.16s ease-out both; }
+::view-transition-group(rail), ::view-transition-group(topbar) { animation-duration: 0.12s; }
+@keyframes vt-fade { from { opacity: 0; } }
+
+/* Cards fading in after a category or search change; they don't move. */
+.grid.fade-in .card { animation: card-in 0.18s ease-out both; }
+@keyframes card-in { from { opacity: 0; } }
 
 .footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .footer div { max-width: 1320px; margin: 0 auto; padding: 22px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
