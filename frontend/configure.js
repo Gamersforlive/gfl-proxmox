@@ -64,6 +64,10 @@ window.GFL_CONFIG = (() => {
         f("MP_HOST", "Host folder to mount", "text", { ph: "none", hint: "A folder or NAS share on the host, like /mnt/gfl/nas", check: (v) => !v || /^\/[A-Za-z0-9._\/-]*$/.test(v) ? null : "An absolute path like /mnt/gfl/nas" }),
         f("MP_PATH", "Mount it at", "text", { def: "/data", show: (v) => !!(v.MP_HOST || "").trim(), req: true, hint: "Media apps use /data", check: (v) => /^\/[A-Za-z0-9._\/-]*$/.test(v) ? null : "A path like /data" })
       ] },
+      ...(s.slug === "ollama" ? [{ group: "Models", fields: [
+        f("OLLAMA_MODELS", "Models to download", "text", { ph: "none", hint: "Names from ollama.com/library, separated by spaces, e.g. llama3.2 qwen2.5:7b",
+          check: (v) => !v || /^[a-z0-9._:\/ -]+$/i.test(v) ? null : "Model names like llama3.2 or qwen2.5:7b" })
+      ] }] : []),
       { group: "Access and extras", fields: [
         f("password", "Root password", "select", { def: "none", options: [["none", "None: console logs in automatically"], ["ask", "Ask me in the terminal"]], hint: "Never put a password in a command; the script asks for it." }),
         f("SSH", "Allow root SSH login", "switch", { def: "no", on: "yes", off: "no" }),
@@ -183,6 +187,7 @@ window.GFL_CONFIG = (() => {
       if (v.ipv6 === "static") { put("IPV6", v.IPV6); put("GATE6", v.GATE6); } else if (v.ipv6 !== "none") put("IPV6", v.ipv6);
       for (const k of ["VLAN", "MTU", "MAC", "NS", "SD", "GFL_STORAGE", "GFL_TEMPLATE_STORAGE"]) put(k, v[k]);
       if (v.password === "ask") put("GFL_ASK_PW", "yes");
+      if ((v.OLLAMA_MODELS || "").trim()) put("OLLAMA_MODELS", v.OLLAMA_MODELS.trim().replace(/\s+/g, " "));
       if (v.SSH === "yes") put("SSH", "yes");
       if (changed("var_gpu")) put("var_gpu", v.var_gpu);
       if (v.VERBOSE === "yes") put("VERBOSE", "yes");

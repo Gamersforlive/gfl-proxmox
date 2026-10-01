@@ -155,6 +155,96 @@ install_gpu_drivers() {
   msg_ok "Installed GPU drivers (check them with: vainfo)"
 }
 
+# Eclipse Temurin JRE from Adoptium. install_java <major> (21, 25...)
+install_java() {
+  local major="$1"
+  msg_info "Installing Java ${major} (Eclipse Temurin)"
+  mkdir -p "/opt/java-${major}"
+  fetch "https://api.adoptium.net/v3/binary/latest/${major}/ga/linux/x64/jre/hotspot/normal/eclipse" | tar -xz -C "/opt/java-${major}" --strip-components=1
+  ln -sf "/opt/java-${major}/bin/java" /usr/local/bin/java
+  msg_ok "Installed $(java -version 2>&1 | head -n1)"
+}
+
+# ---- SteamCMD game servers ----------------------------------------------------------------
+# Games run as the "steam" user. install_steamcmd, then steam_game <appid> <dir> writes
+# /opt/steam/update-game.sh (also used by `update`) and downloads the game.
+install_steamcmd() {
+  msg_info "Installing SteamCMD"
+  $STD apt-get install -y lib32gcc-s1 lib32stdc++6 screen
+  id -u steam >/dev/null 2>&1 || useradd -r -m -d /opt/steam -s /bin/bash steam
+  mkdir -p /opt/steam/steamcmd
+  fetch https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz | tar -xz -C /opt/steam/steamcmd
+  chown -R steam:steam /opt/steam
+  # The first run updates SteamCMD itself; it may exit non-zero while doing so.
+  runuser -u steam -- /opt/steam/steamcmd/steamcmd.sh +quit >>"$GFL_LOG" 2>&1 || true
+  # Some servers look for the Steam client library here.
+  runuser -u steam -- mkdir -p /opt/steam/.steam/sdk64 /opt/steam/.steam/sdk32
+  ln -sf /opt/steam/steamcmd/linux64/steamclient.so /opt/steam/.steam/sdk64/steamclient.so
+  ln -sf /opt/steam/steamcmd/linux32/steamclient.so /opt/steam/.steam/sdk32/steamclient.so
+  msg_ok "Installed SteamCMD"
+}
+
+steam_game() {
+  local appid="$1" dir="$2"
+  mkdir -p "$dir"
+  chown steam:steam "$dir"
+  cat >/opt/steam/update-game.sh <<EOF
+#!/usr/bin/env bash
+# Downloads or updates the game files (Steam app ${appid}). SteamCMD sometimes fails on the
+# first try, so it retries.
+for i in 1 2 3; do
+  /opt/steam/steamcmd/steamcmd.sh +force_install_dir "${dir}" +login anonymous +app_update ${appid} validate +quit && exit 0
+  sleep 5
+done
+exit 1
+EOF
+  chmod 755 /opt/steam/update-game.sh
+  msg_info "Downloading the game server (can take a long time)"
+  $STD runuser -u steam -- /opt/steam/update-game.sh
+  msg_ok "Downloaded the game server to ${dir}"
+}
+
+# game_service <name> <description> <workdir> <command...> -- runs as "steam" under screen,
+# so `game-console` can attach to the live console.
+game_service() {
+  local name="$1" desc="$2" dir="$3"
+  shift 3
+  cat >"/etc/systemd/system/${name}.service" <<EOF
+[Unit]
+Description=${desc}
+After=network-online.target
+
+[Service]
+User=steam
+WorkingDirectory=${dir}
+Environment=HOME=/opt/steam
+ExecStart=/usr/bin/screen -DmS ${name} $*
+ExecStop=/usr/bin/screen -S ${name} -X stuff "^C"
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  cat >/usr/local/bin/game-console <<EOF
+#!/usr/bin/env bash
+# Opens the live server console. Leave with Ctrl+A then D; the server keeps running.
+exec runuser -u steam -- screen -r ${name}
+EOF
+  chmod +x /usr/local/bin/game-console
+  systemctl daemon-reload
+  systemctl enable -q --now "$name"
+}
+
+# ---- Docker apps --------------------------------------------------------------------------------
+# docker_app <dir> : starts /opt/<dir>/compose.yaml that the caller wrote (installs Docker first
+# when needed). Saves typing in the many Docker-based installers.
+docker_app() {
+  command -v docker >/dev/null 2>&1 || install_docker
+  compose_up "$1"
+}
+
 # Runs a compose stack stored in /opt/<dir>/compose.yaml (the caller writes the file first).
 compose_up() {
   msg_info "Starting ${APP}"

@@ -180,7 +180,10 @@
   function renderScript(s, tab) {
     const r = s.resources || {};
     const flags = (s.flags || []).map((f) => `<span class="tag tag-flag">${f === "gpu" ? "GPU ready" : f === "docker" ? "Docker" : esc(f)}</span>`).join("");
-    const url = s.port ? (s.proto && !/^https?$/.test(s.proto) ? `${s.proto}://<container-ip>:${s.port}` : `${s.proto || "http"}://<container-ip>:${s.port}`) : null;
+    const url = !s.port ? null
+      : /^(udp|tcp)$/.test(s.proto || "") ? `<container-ip>:${s.port} (${s.proto.toUpperCase()})`
+      : s.proto && !/^https?$/.test(s.proto) ? `${s.proto}://<container-ip>:${s.port}`
+      : `${s.proto || "http"}://<container-ip>:${s.port}${s.path || ""}`;
     const where = {
       tool: "Run this in the Proxmox host shell. It asks before changing anything.",
       vm: "Run this in the Proxmox host shell. It creates a new virtual machine.",

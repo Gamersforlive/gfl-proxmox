@@ -25,6 +25,18 @@ systemctl daemon-reload
 systemctl restart ollama
 msg_ok "Ollama listens on port 11434"
 
+# Models chosen on the website (Custom settings > Models to download), e.g. "llama3.2 qwen2.5:7b".
+if [ -n "${OLLAMA_MODELS:-}" ]; then
+  for i in $(seq 1 30); do
+    if ollama list >/dev/null 2>&1; then break; fi
+    sleep 1
+  done
+  for m in $OLLAMA_MODELS; do
+    msg_info "Downloading the ${m} model (can take a while)"
+    if $STD ollama pull "$m"; then msg_ok "Downloaded ${m}"; else msg_warn "Could not download ${m}; try later with: ollama pull ${m}"; fi
+  done
+fi
+
 motd_ssh
 customize
 cleanup_lxc

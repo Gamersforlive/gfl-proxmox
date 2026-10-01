@@ -33,5 +33,7 @@ update_script() {
 }
 
 start
+# Models to download right after install, e.g. OLLAMA_MODELS="llama3.2 qwen2.5:7b"
+GFL_EXTRA_ENV=(OLLAMA_MODELS="${OLLAMA_MODELS:-}")
 build_container
 finish

@@ -11,6 +11,7 @@
     { "id": "monitoring", "name": "Monitoring" },
     { "id": "home", "name": "Smart home" },
     { "id": "ai", "name": "AI" },
+    { "id": "dev", "name": "Developer tools" },
     { "id": "gaming", "name": "Gaming" },
     { "id": "database", "name": "Databases" },
     { "id": "vm", "name": "Virtual machines" },
@@ -192,6 +193,88 @@
       "notes": ["Photos are stored in /data/immich/library. Mount large storage there before you start uploading.", "The first start downloads about 3 GB of images."]
     },
     {
+      "slug": "bazarr", "icon": "icons/bazarr.svg", "name": "Bazarr", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Downloads subtitles for everything in Radarr and Sonarr.",
+      "description": "Bazarr in Docker, sharing your /data folder. It reads your library from Radarr and Sonarr and finds subtitles in the languages you choose.",
+      "website": "https://www.bazarr.media", "docs": "https://wiki.bazarr.media",
+      "port": 6767,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "flags": ["docker"],
+      "login": "No login at first; turn on authentication under Settings > General.",
+      "notes": ["Give it the same /data folder as Radarr and Sonarr (Custom settings > Host folder to mount) so the paths match."]
+    },
+    {
+      "slug": "kavita", "icon": "icons/kavita.svg", "name": "Kavita", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "A fast reader for ebooks, comics and manga in the browser.",
+      "description": "Kavita from its official release, running as its own user in the shared media group. Read books, comics and manga in the browser with progress synced across devices.",
+      "website": "https://www.kavitareader.com", "docs": "https://wiki.kavitareader.com",
+      "port": 5000,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "login": "Create the admin account on first visit."
+    },
+    {
+      "slug": "tdarr", "icon": "icons/tdarr.svg", "name": "Tdarr", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Converts your library to smaller files, automatically.",
+      "description": "Tdarr server with a built-in worker node in Docker. It scans your library and converts files (for example to H.265) to save space, using the GPU when one is passed in.",
+      "website": "https://home.tdarr.io", "docs": "https://docs.tdarr.io",
+      "port": 8265,
+      "resources": { "cpu": 4, "ram": 4096, "disk": 32 },
+      "flags": ["docker", "gpu"],
+      "notes": ["Your library is at /media inside Tdarr (it's /data/media in the container).", "Test a flow on a small library first: Tdarr replaces the original files."]
+    },
+    {
+      "slug": "jellystat", "icon": "icons/jellystat.svg", "name": "Jellystat", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Watch statistics and history for your Jellyfin server.",
+      "description": "Jellystat with its PostgreSQL database in Docker. See who watches what, when, and on which device, with charts and a full playback history.",
+      "website": "https://github.com/CyferShepard/Jellystat", "docs": "https://github.com/CyferShepard/Jellystat#readme",
+      "port": 3000,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Create your login on first visit."
+    },
+    {
+      "slug": "sabnzbd", "icon": "icons/sabnzbd.svg", "name": "SABnzbd", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Usenet downloader that works with Radarr and Sonarr.",
+      "description": "SABnzbd in Docker, sharing your /data folder. Add it to Radarr and Sonarr as a download client to grab from Usenet next to torrents.",
+      "website": "https://sabnzbd.org", "docs": "https://sabnzbd.org/wiki/",
+      "port": 8080,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Set a login in Config > General after the wizard.",
+      "notes": ["You need a Usenet provider (paid) and an indexer; add the indexer in Prowlarr."]
+    },
+    {
+      "slug": "tautulli", "icon": "icons/tautulli.svg", "name": "Tautulli", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Watch statistics and notifications for your Plex server.",
+      "description": "Tautulli in Docker. Follows everything played on Plex: history, statistics, newsletters and notifications to Discord or Telegram.",
+      "website": "https://tautulli.com", "docs": "https://github.com/Tautulli/Tautulli/wiki",
+      "port": 8181,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "login": "Set a login in the setup wizard."
+    },
+    {
+      "slug": "komga", "icon": "icons/komga.svg", "name": "Komga", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "A media server for comics, manga and magazines.",
+      "description": "Komga in Docker, reading from /data/media. Organises series, tracks reading progress and works with apps like Tachiyomi/Mihon and Panels.",
+      "website": "https://komga.org", "docs": "https://komga.org/docs/introduction",
+      "port": 25600,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Create the admin account on first visit."
+    },
+    {
+      "slug": "calibre-web", "icon": "icons/calibre-web.svg", "name": "Calibre-Web", "type": "ct", "category": "media", "added": "2026-10-02",
+      "summary": "Read, browse and send your Calibre ebooks from the web.",
+      "description": "Calibre-Web in Docker with Calibre's converter included. Browse your Calibre library, read in the browser, convert formats and send books to a Kindle.",
+      "website": "https://github.com/janeczku/calibre-web", "docs": "https://github.com/janeczku/calibre-web/wiki",
+      "port": 8083,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "login": "admin / admin123 at first: change it straight away.",
+      "notes": ["Calibre-Web needs an existing Calibre library (a folder with metadata.db). Copy yours to /data/media/books, or create one with the Calibre desktop app."]
+    },
+    {
       "slug": "adguard", "icon": "icons/adguard-home.svg", "name": "AdGuard Home", "type": "ct", "category": "network", "added": "2026-09-30",
       "summary": "Blocks ads and trackers for every device on your network.",
       "description": "AdGuard Home installed with the official installer as a system service. It answers DNS for your whole network and filters ads, trackers and malware domains.",
@@ -230,6 +313,29 @@
       "notes": ["Inside the container run: cloudflared service install <your tunnel token>"]
     },
     {
+      "slug": "pihole", "icon": "icons/pi-hole.svg", "name": "Pi-hole", "type": "ct", "category": "network", "added": "2026-10-02",
+      "summary": "The classic network-wide ad blocker.",
+      "description": "Pi-hole 6 in Docker. Blocks ads and trackers for every device by answering your network's DNS, with a dashboard of every query.",
+      "website": "https://pi-hole.net", "docs": "https://docs.pi-hole.net",
+      "port": 80,
+      "path": "/admin",
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "login": "Password in /root/pihole.creds inside the container.",
+      "notes": ["Give the container a static IP (Custom settings) before pointing your router at it."]
+    },
+    {
+      "slug": "traefik", "icon": "icons/traefik.svg", "name": "Traefik", "type": "ct", "category": "network", "added": "2026-10-02",
+      "summary": "A reverse proxy configured with small files, with automatic HTTPS.",
+      "description": "Traefik 3 in Docker with a file-based configuration, so it can route to apps in any container or VM. Certificates come from Let's Encrypt automatically.",
+      "website": "https://traefik.io/traefik/", "docs": "https://doc.traefik.io/traefik/",
+      "port": 8080,
+      "path": "/dashboard/",
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "notes": ["The dashboard on port 8080 has no login: don't expose it to the internet.", "Forward ports 80 and 443 on your router to this container."]
+    },
+    {
       "slug": "wg-easy", "icon": "icons/wireguard.svg", "name": "WireGuard (wg-easy)", "type": "ct", "category": "security", "added": "2026-09-30",
       "summary": "Your own VPN with a web UI for adding phones and laptops.",
       "description": "wg-easy v15 in Docker: a WireGuard server with a web page where you add clients and scan a QR code on your phone. The script loads the WireGuard kernel module on the host.",
@@ -252,6 +358,18 @@
       "notes": ["Browsers only allow the web vault over HTTPS. Put it behind Nginx Proxy Manager, Caddy or a Cloudflare Tunnel.", "After creating your accounts, set SIGNUPS_ALLOWED=false in /opt/vaultwarden/compose.yaml and run docker compose up -d."]
     },
     {
+      "slug": "authentik", "icon": "icons/authentik.svg", "name": "authentik", "type": "ct", "category": "security", "added": "2026-10-02",
+      "summary": "One login for all your apps: SSO, 2FA and user management.",
+      "description": "authentik with its own official compose file in Docker. Sign in once for every app that supports OpenID Connect, SAML or LDAP, add two-factor login, and put a login page in front of apps that have none.",
+      "website": "https://goauthentik.io", "docs": "https://docs.goauthentik.io",
+      "port": 9000,
+      "path": "/if/flow/initial-setup/",
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "flags": ["docker"],
+      "login": "Open /if/flow/initial-setup/ once to set the password of the akadmin user.",
+      "notes": ["The first start takes a minute or two while the database is prepared."]
+    },
+    {
       "slug": "syncthing", "icon": "icons/syncthing.svg", "name": "Syncthing", "type": "ct", "category": "files", "added": "2026-10-01",
       "summary": "Keep folders in sync between your PCs, phone and server.",
       "description": "Syncthing from its official repository, running as its own user with the web UI open to your network. Files go directly between your devices, with no cloud in between.",
@@ -262,7 +380,7 @@
       "notes": ["Synced folders go in /data/sync. Mount larger storage there if you need it."]
     },
     {
-      "slug": "gitea", "icon": "icons/gitea.svg", "name": "Gitea", "type": "ct", "category": "files", "added": "2026-10-01",
+      "slug": "gitea", "icon": "icons/gitea.svg", "name": "Gitea", "type": "ct", "category": "dev", "added": "2026-10-01",
       "summary": "Your own GitHub: Git hosting with issues and pull requests.",
       "description": "Gitea installed from its official binary, following the Gitea docs. Lightweight Git hosting with a web UI, issues, pull requests, packages and Actions.",
       "website": "https://about.gitea.com", "docs": "https://docs.gitea.com",
@@ -270,6 +388,34 @@
       "resources": { "cpu": 2, "ram": 1024, "disk": 16 },
       "login": "Create the admin account at the bottom of the installer page.",
       "notes": ["On the installer page, pick SQLite as the database unless you already run MariaDB or PostgreSQL."]
+    },
+    {
+      "slug": "forgejo", "icon": "icons/forgejo.svg", "name": "Forgejo", "type": "ct", "category": "dev", "added": "2026-10-02",
+      "summary": "Community-run Git hosting, a light GitHub you own.",
+      "description": "Forgejo from its official binary: Git hosting with issues, pull requests, packages and Actions, run by a non-profit community. A drop-in alternative to Gitea.",
+      "website": "https://forgejo.org", "docs": "https://forgejo.org/docs/latest/",
+      "port": 3000,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 16 },
+      "login": "Create the admin account at the bottom of the installer page."
+    },
+    {
+      "slug": "code-server", "icon": "icons/code-server.png", "name": "code-server", "type": "ct", "category": "dev", "added": "2026-10-02",
+      "summary": "VS Code in your browser, on your own server.",
+      "description": "code-server runs Visual Studio Code on the server and shows it in your browser, so you can code from any device. Extensions, terminal and Git included.",
+      "website": "https://coder.com/docs/code-server", "docs": "https://coder.com/docs/code-server",
+      "port": 8080,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "login": "Password in /root/code-server.creds inside the container.",
+      "notes": ["Some browser features (clipboard, webviews) need HTTPS: put it behind a reverse proxy for daily use."]
+    },
+    {
+      "slug": "jenkins", "icon": "icons/jenkins.svg", "name": "Jenkins", "type": "ct", "category": "dev", "added": "2026-10-02",
+      "summary": "The classic automation server for builds and deployments.",
+      "description": "Jenkins LTS from the official repository on Java 21. Build, test and deploy your projects with pipelines and thousands of plugins.",
+      "website": "https://www.jenkins.io", "docs": "https://www.jenkins.io/doc/",
+      "port": 8080,
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "login": "Unlock it with the password in /root/jenkins.creds, then create your admin."
     },
     {
       "slug": "paperless-ngx", "icon": "icons/paperless-ngx.svg", "name": "Paperless-ngx", "type": "ct", "category": "files", "added": "2026-10-01",
@@ -292,6 +438,28 @@
       "flags": ["docker"],
       "login": "Create the owner account on first visit.",
       "notes": ["Secure cookies are turned off so login works over plain http on your LAN. Remove N8N_SECURE_COOKIE from /opt/n8n/compose.yaml once n8n is behind HTTPS."]
+    },
+    {
+      "slug": "nextcloud", "icon": "icons/nextcloud.svg", "name": "Nextcloud", "type": "ct", "category": "files", "added": "2026-10-02",
+      "summary": "Your own Google Drive: files, calendar, contacts and more.",
+      "description": "Nextcloud's official image with MariaDB, Redis and background jobs in Docker. The admin account is created for you; sync files from your PC and phone, share links, and add apps like Calendar, Contacts and Talk.",
+      "website": "https://nextcloud.com", "docs": "https://docs.nextcloud.com",
+      "port": 8080,
+      "resources": { "cpu": 2, "ram": 4096, "disk": 32 },
+      "flags": ["docker"],
+      "login": "User admin; the password is in /root/nextcloud.creds inside the container.",
+      "notes": ["Files live in /opt/nextcloud/data; give the container a big disk or a mount point.", "For HTTPS put it behind Nginx Proxy Manager or Caddy, then add the domain to trusted_domains."]
+    },
+    {
+      "slug": "proxmox-backup-server", "icon": "icons/proxmox.svg", "name": "Proxmox Backup Server", "type": "ct", "category": "files", "added": "2026-10-02",
+      "summary": "Fast, deduplicated backups for your Proxmox VMs and containers.",
+      "description": "Proxmox Backup Server from Proxmox's no-subscription repository in a container. Backups are deduplicated and incremental, so nightly backups are quick and small. A datastore is created for you.",
+      "website": "https://www.proxmox.com/en/products/proxmox-backup-server/overview", "docs": "https://pbs.proxmox.com/docs/",
+      "port": 8007,
+      "proto": "https",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 32 },
+      "login": "User root@pam; the password is in /root/proxmox-backup-server.creds inside the container.",
+      "notes": ["Mount big storage at /backup (Custom settings > Host folder to mount, path /backup) before the first backup.", "Better on a different machine than the Proxmox host it backs up."]
     },
     {
       "slug": "uptime-kuma", "icon": "icons/uptime-kuma.svg", "name": "Uptime Kuma", "type": "ct", "category": "monitoring", "added": "2026-09-30",
@@ -342,6 +510,39 @@
       "notes": ["Protect the editor before exposing it: set adminAuth in /var/lib/node-red/settings.js, then systemctl restart node-red."]
     },
     {
+      "slug": "frigate", "icon": "icons/frigate.svg", "name": "Frigate", "type": "ct", "category": "home", "added": "2026-10-02",
+      "summary": "A camera recorder (NVR) with AI person and car detection.",
+      "description": "Frigate in Docker: records your IP cameras and detects people, cars and animals in real time, with the GPU passed in for video decoding. Works great with Home Assistant.",
+      "website": "https://frigate.video", "docs": "https://docs.frigate.video",
+      "port": 8971,
+      "proto": "https",
+      "resources": { "cpu": 4, "ram": 4096, "disk": 32 },
+      "flags": ["docker", "gpu"],
+      "login": "User admin; the password is in /root/frigate.creds inside the container.",
+      "notes": ["Recordings go to /data/frigate inside the container; mount big storage there.", "A Google Coral or a GPU makes detection much lighter on the CPU."]
+    },
+    {
+      "slug": "home-assistant", "icon": "icons/home-assistant.svg", "name": "Home Assistant", "type": "ct", "category": "home", "added": "2026-10-02",
+      "summary": "Home Assistant in a light container (without add-ons).",
+      "description": "Home Assistant Core in Docker with host networking so it discovers your devices. Lighter than the VM; run extras like Mosquitto and Zigbee2MQTT as their own containers.",
+      "website": "https://www.home-assistant.io", "docs": "https://www.home-assistant.io/installation/linux#docker-compose",
+      "port": 8123,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["docker"],
+      "login": "Create your account in the onboarding screen.",
+      "notes": ["This version has no add-on store. For add-ons, use the Home Assistant OS VM.", "USB sticks (Zigbee, Z-Wave) need to be passed into the container first; see the guide."]
+    },
+    {
+      "slug": "zigbee2mqtt", "icon": "icons/zigbee2mqtt.svg", "name": "Zigbee2MQTT", "type": "ct", "category": "home", "added": "2026-10-02",
+      "summary": "Use Zigbee devices from any brand, without their hubs.",
+      "description": "Zigbee2MQTT in Docker. Talks to your Zigbee lights, sensors and switches through a USB or network adapter and publishes them over MQTT for Home Assistant.",
+      "website": "https://www.zigbee2mqtt.io", "docs": "https://www.zigbee2mqtt.io/guide/getting-started/",
+      "port": 8080,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "notes": ["It needs an MQTT broker: install Mosquitto first.", "Network adapters (like the SLZB-06) work without passing any USB device in."]
+    },
+    {
       "slug": "ollama", "icon": "icons/ollama-light.svg", "name": "Ollama", "type": "ct", "category": "ai", "added": "2026-09-30",
       "summary": "Run large language models on your own hardware.",
       "description": "Ollama with its API open to your network on port 11434. If the host has an Intel or AMD GPU it is passed in; NVIDIA needs the extra steps in the GPU passthrough guide.",
@@ -361,6 +562,25 @@
       "flags": ["docker"],
       "login": "The first account you create becomes the admin.",
       "notes": ["Add Ollama under Admin Panel > Settings > Connections: http://<ollama-ip>:11434"]
+    },
+    {
+      "slug": "localai", "icon": "icons/localai.svg", "name": "LocalAI", "type": "ct", "category": "ai", "added": "2026-10-02",
+      "summary": "An OpenAI-compatible API for local text, image and voice models.",
+      "description": "LocalAI in Docker: run language, image, speech and embedding models locally behind the same API as OpenAI, so apps built for OpenAI work with your own server.",
+      "website": "https://localai.io", "docs": "https://localai.io/docs/",
+      "port": 8080,
+      "resources": { "cpu": 4, "ram": 8192, "disk": 40 },
+      "flags": ["docker"],
+      "notes": ["Models live in /opt/localai/models; give the container plenty of disk.", "This is the CPU version; GPU images are listed in the LocalAI docs."]
+    },
+    {
+      "slug": "searxng", "icon": "icons/searxng.svg", "name": "SearXNG", "type": "ct", "category": "ai", "added": "2026-10-02",
+      "summary": "A private search engine that queries many others for you.",
+      "description": "SearXNG in Docker: searches Google, Bing, DuckDuckGo and dozens more at once without tracking you. Also a handy web search for Open WebUI and other AI tools (JSON output is on).",
+      "website": "https://docs.searxng.org", "docs": "https://docs.searxng.org/admin/settings/index.html",
+      "port": 8080,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "flags": ["docker"]
     },
     {
       "slug": "minecraft", "icon": "icons/minecraft.svg", "name": "Minecraft (Paper)", "type": "ct", "category": "gaming", "added": "2026-09-30",
@@ -390,6 +610,124 @@
       "proto": "udp",
       "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
       "notes": ["Join with the container's IP. Forward UDP port 34197 on your router for friends outside your network.", "Set the server name, password and public listing in /opt/factorio/data/server-settings.json, then systemctl restart factorio."]
+    },
+    {
+      "slug": "valheim", "icon": "icons/valheim.png", "name": "Valheim", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Valheim dedicated server for you and your Viking friends.",
+      "description": "The official Valheim dedicated server through SteamCMD, running as a service with a console. A world and a server password are created for you; the world keeps running when you log off.",
+      "website": "https://www.valheimgame.com", "docs": "https://valheim.fandom.com/wiki/Dedicated_servers",
+      "port": 2456,
+      "proto": "udp",
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "login": "Server password in /root/valheim.creds inside the container.",
+      "notes": ["Forward UDP ports 2456-2457 on your router to play with friends outside your network.", "Change the server name, world and password in /opt/valheim/server.env, then systemctl restart valheim."]
+    },
+    {
+      "slug": "palworld", "icon": "icons/palworld.png", "name": "Palworld", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Palworld dedicated server with an admin password set up.",
+      "description": "The official Palworld dedicated server through SteamCMD, as a service with a console. The settings file is created with a server name and an admin password, ready to edit.",
+      "website": "https://www.pocketpair.jp/palworld", "docs": "https://docs.palworldgame.com/",
+      "port": 8211,
+      "proto": "udp",
+      "resources": { "cpu": 4, "ram": 16384, "disk": 32 },
+      "login": "Admin password in /root/palworld.creds inside the container.",
+      "notes": ["Palworld uses a lot of memory: 16 GB is a good start for a few players.", "Forward UDP port 8211 on your router for friends outside your network."]
+    },
+    {
+      "slug": "satisfactory", "icon": "icons/satisfactory.png", "name": "Satisfactory", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Satisfactory dedicated server to build factories together.",
+      "description": "The official Satisfactory dedicated server through SteamCMD, as a service. You claim and configure it from inside the game's Server Manager.",
+      "website": "https://www.satisfactorygame.com", "docs": "https://satisfactory.wiki.gg/wiki/Dedicated_servers",
+      "port": 7777,
+      "proto": "udp",
+      "resources": { "cpu": 4, "ram": 12288, "disk": 32 },
+      "login": "Claim the server in the game's Server Manager and set an admin password there.",
+      "notes": ["Forward port 7777 (TCP and UDP) and 8888 (TCP) for friends outside your network."]
+    },
+    {
+      "slug": "project-zomboid", "name": "Project Zomboid", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Project Zomboid dedicated server with an admin account.",
+      "description": "The official Project Zomboid dedicated server through SteamCMD, as a service with a console. The admin account is created on the first start and the server gets most of the container's memory.",
+      "website": "https://projectzomboid.com", "docs": "https://pzwiki.net/wiki/Dedicated_server",
+      "port": 16261,
+      "proto": "udp",
+      "resources": { "cpu": 2, "ram": 8192, "disk": 16 },
+      "login": "User admin; the password is in /root/project-zomboid.creds inside the container.",
+      "notes": ["Server settings are in /opt/steam/Zomboid/Server/gfl.ini.", "Forward UDP ports 16261-16262 on your router for friends outside your network."]
+    },
+    {
+      "slug": "counter-strike-2", "icon": "icons/counter-strike-2.png", "name": "Counter-Strike 2", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Counter-Strike 2 dedicated server for matches with friends.",
+      "description": "The official Counter-Strike 2 dedicated server through SteamCMD (a 60 GB download), as a service with a console and RCON. Map, mode and player count are set in one small file.",
+      "website": "https://www.counter-strike.net", "docs": "https://developer.valvesoftware.com/wiki/Counter-Strike_2/Dedicated_Servers",
+      "port": 27015,
+      "proto": "udp",
+      "resources": { "cpu": 4, "ram": 8192, "disk": 80 },
+      "login": "RCON password in /root/counter-strike-2.creds inside the container.",
+      "notes": ["The first download is about 60 GB and takes a while.", "For a public server, create a Game Server Login Token for app 730 at steamcommunity.com/dev/managegameservers and put it in /opt/cs2/server.env."]
+    },
+    {
+      "slug": "rust", "name": "Rust", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Rust dedicated server with a procedural map.",
+      "description": "The official Rust dedicated server through SteamCMD, as a service with web RCON. Map size, seed, name and player count are set in one small file.",
+      "website": "https://rust.facepunch.com", "docs": "https://wiki.facepunch.com/rust/Creating-a-server",
+      "port": 28015,
+      "proto": "udp",
+      "resources": { "cpu": 4, "ram": 12288, "disk": 40 },
+      "login": "RCON password in /root/rust.creds inside the container.",
+      "notes": ["Rust wipes are up to you: change SEED in /opt/rust/server.env for a new map.", "Forward UDP 28015 (game) and TCP 28016 (RCON, only if you need it remotely)."]
+    },
+    {
+      "slug": "terraria", "icon": "icons/terraria.png", "name": "Terraria", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "The official Terraria server with a world ready to join.",
+      "description": "The official Terraria dedicated server from terraria.org, as a service with a console. A medium world is created on the first start.",
+      "website": "https://terraria.org", "docs": "https://terraria.wiki.gg/wiki/Server",
+      "port": 7777,
+      "proto": "tcp",
+      "resources": { "cpu": 1, "ram": 2048, "disk": 4 },
+      "notes": ["Set a password, world size and player count in /opt/terraria/serverconfig.txt, then systemctl restart terraria.", "Forward TCP port 7777 for friends outside your network."]
+    },
+    {
+      "slug": "minecraft-fabric", "icon": "icons/minecraft.svg", "name": "Minecraft Fabric", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A Fabric Minecraft server for lightweight mods.",
+      "description": "Minecraft with the Fabric mod loader on Java 25, for the newest stable Minecraft. Drop Fabric mods in the mods folder and restart.",
+      "website": "https://fabricmc.net", "docs": "https://fabricmc.net/wiki/player:tutorials:install_server",
+      "port": 25565,
+      "proto": "minecraft",
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "notes": ["The script asks you to accept the Minecraft EULA first.", "Most mods need Fabric API: download it from modrinth.com into /opt/minecraft/mods.", "Pin a Minecraft version: MC_VERSION=1.21.1 /opt/minecraft/fabric-update.sh, then systemctl restart minecraft."]
+    },
+    {
+      "slug": "minecraft-neoforge", "icon": "icons/minecraft.svg", "name": "Minecraft NeoForge", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A NeoForge Minecraft server for modpacks like Create.",
+      "description": "Minecraft with the NeoForge mod loader, set up for Minecraft 1.21.1 by default (the version most big modpacks use) with Java 21. Copy your modpack's mods and config folders in and start.",
+      "website": "https://neoforged.net", "docs": "https://docs.neoforged.net/",
+      "port": 25565,
+      "proto": "minecraft",
+      "resources": { "cpu": 4, "ram": 8192, "disk": 24 },
+      "notes": ["The script asks you to accept the Minecraft EULA first.", "Another Minecraft version: set MC_VERSION before running, for example MC_VERSION=26.1.", "Modpack servers need the same mods as the players (client-only mods excepted)."]
+    },
+    {
+      "slug": "minecraft-bedrock", "icon": "icons/minecraft.svg", "name": "Minecraft Bedrock", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "The official Bedrock server for phones, consoles and Windows.",
+      "description": "Mojang's Bedrock Dedicated Server, for players on Minecraft for Windows, phones and tablets. Updates keep your worlds and settings.",
+      "website": "https://www.minecraft.net/download/server/bedrock", "docs": "https://minecraft.wiki/w/Bedrock_Dedicated_Server",
+      "port": 19132,
+      "proto": "udp",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 8 },
+      "notes": ["The script asks you to accept the Minecraft EULA first.", "Xbox, PlayStation and Switch players can only join servers on their friends list; use a tool like BedrockConnect or a Realm for them."]
+    },
+    {
+      "slug": "crafty", "icon": "icons/crafty-controller.svg", "name": "Crafty Controller", "type": "ct", "category": "gaming", "added": "2026-10-02",
+      "summary": "A web panel to create and run several Minecraft servers.",
+      "description": "Crafty Controller 4 in Docker: a web panel to create, start, back up and update Java and Bedrock Minecraft servers, with a live console and scheduled tasks.",
+      "website": "https://craftycontrol.com", "docs": "https://docs.craftycontrol.com",
+      "port": 8443,
+      "proto": "https",
+      "resources": { "cpu": 2, "ram": 4096, "disk": 32 },
+      "flags": ["docker"],
+      "login": "User admin; the first password is in /opt/crafty/config/default-creds.txt inside the container.",
+      "notes": ["Game ports 25500-25600 are open for your servers; use ports from that range.", "Accept the self-signed certificate warning when you first open the panel."]
     },
     {
       "slug": "mariadb", "icon": "icons/mariadb.svg", "name": "MariaDB", "type": "ct", "category": "database", "added": "2026-09-30",

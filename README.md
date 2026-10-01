@@ -27,18 +27,23 @@ Needs Proxmox VE 8.2 or newer (9.x included) on an amd64 host.
 
 | | |
 |---|---|
-| **Docker & containers** | Docker, Portainer, Dockge |
-| **Media & downloads** | Jellyfin (GPU ready), Radarr, Sonarr, Prowlarr, qBittorrent, all sharing one `/data` layout |
-| **Network & DNS** | AdGuard Home, Nginx Proxy Manager, Caddy, Cloudflared |
-| **Security & VPN** | WireGuard (wg-easy), Vaultwarden |
-| **Monitoring** | Uptime Kuma, Grafana |
-| **AI** | Ollama (GPU ready), Open WebUI |
-| **Gaming** | Minecraft (Paper, newest stable), Pterodactyl Wings |
-| **Databases** | MariaDB, PostgreSQL |
+| **Bundles** | Media bundle: qBittorrent, Prowlarr, FlareSolverr, Radarr, Sonarr, Jellyfin and Seerr, created and connected to each other automatically |
+| **Docker & containers** | Docker, Portainer, Dockge, Homepage |
+| **Media & downloads** | Jellyfin, Plex, Radarr, Sonarr, Lidarr, Prowlarr, Bazarr, qBittorrent, SABnzbd, Seerr, FlareSolverr, Navidrome, Audiobookshelf, Immich, Kavita, Komga, Calibre-Web, Tdarr, Jellystat, Tautulli |
+| **Network & DNS** | AdGuard Home, Pi-hole, Nginx Proxy Manager, Caddy, Traefik, Cloudflared |
+| **Security & VPN** | WireGuard (wg-easy), Vaultwarden, authentik |
+| **Files & automation** | Nextcloud, Syncthing, Paperless-ngx, n8n, Proxmox Backup Server |
+| **Monitoring** | Uptime Kuma, Grafana, Prometheus |
+| **Smart home** | Home Assistant, Zigbee2MQTT, Mosquitto, Node-RED, Frigate |
+| **AI** | Ollama (with model presets), Open WebUI, LocalAI, SearXNG |
+| **Developer tools** | Gitea, Forgejo, code-server, Jenkins |
+| **Gaming** | Minecraft (Paper, Fabric, NeoForge, Bedrock), Crafty Controller, Pterodactyl Wings, Valheim, Palworld, Satisfactory, Project Zomboid, Counter-Strike 2, Rust, Terraria, Factorio |
+| **Databases** | MariaDB, PostgreSQL, Redis |
 | **Virtual machines** | Home Assistant OS, Debian 13 (cloud-init) |
-| **Host tools** | Post-install setup, update all containers, clean old kernels, CPU microcode, add Tailscale to a container, add GPU to a container, host config backup |
+| **Host tools** | Post-install setup, GFL status, update all GFL apps, update all containers, mount a NAS share, clean old kernels, CPU microcode, add Tailscale or a GPU to a container, host config backup |
 
-Every container gets an `update` command that updates its app the right way.
+Every container gets an `update` command that updates its app the right way. Every app page on the
+website has a guide: install with the script, install by hand, install with Docker, and how to use it.
 
 ## Repository layout
 
