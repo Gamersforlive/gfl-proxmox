@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# GFL Proxmox Scripts - helpers used by install/<app>-install.sh inside the new container.
+# build.func pushes this file (plus core.func) to /opt/gfl/ before running the installer.
+
+# shellcheck source=/dev/null
+source "$(dirname "${BASH_SOURCE[0]}")/core.func"
+
+export DEBIAN_FRONTEND=noninteractive
+APP="${APP:-app}"
+NSAPP="${NSAPP:-app}"
+
+setting_up_container() {
+  msg_info "Setting up the container"
+  # The template ships without a generated locale; C.UTF-8 always exists.
+  echo 'LANG=C.UTF-8' >/etc/default/locale
+  export LANG=C.UTF-8
+  rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
+  systemctl disable -q --now systemd-networkd-wait-online.service 2>/dev/null || true
+  msg_ok "Set up the container"
+}
+
+network_check() {
+  msg_info "Checking internet access"
+  local i
+  for i in $(seq 1 10); do
+    if getent hosts deb.debian.org >/dev/null 2>&1; then
+      msg_ok "Internet access works"
+      return 0
+    fi
+    sleep 1
+  done
+  msg_error "The container cannot resolve deb.debian.org. Check its DNS and gateway."
+  exit 1
+}
+
+update_os() {
+  msg_info "Updating the OS"
+  $STD apt-get update
+  $STD apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
+  $STD apt-get install -y curl ca-certificates gnupg sudo jq
+  msg_ok "Updated the OS"
+}
+
+# Adds an apt repository the modern way (deb822 + its own keyring).
+# add_repo <name> <key-url> <uri> <suite> <components>
+add_repo() {
+  local name="$1" key="$2" uri="$3" suite="$4" comps="$5"
+  local tmp
+  tmp=$(mktemp)
+  mkdir -p /etc/apt/keyrings
+  fetch "$key" -o "$tmp"
+  if grep -q -- "-----BEGIN PGP" "$tmp"; then
+    gpg --dearmor --yes -o "/etc/apt/keyrings/${name}.gpg" "$tmp"
+  else
+    cp "$tmp" "/etc/apt/keyrings/${name}.gpg"
+  fi
+  rm -f "$tmp"
+  # apt verifies signatures as the unprivileged _apt user, so the keyring must be world-readable.
+  chmod 644 "/etc/apt/keyrings/${name}.gpg"
+  cat >"/etc/apt/sources.list.d/${name}.sources" <<EOF
+Types: deb
+URIs: ${uri}
+Suites: ${suite}
+Components: ${comps}
+Signed-By: /etc/apt/keyrings/${name}.gpg
+EOF
+  $STD apt-get update
+}
+
+# Docker Engine + compose plugin from Docker's own repository.
+install_docker() {
+  msg_info "Installing Docker"
+  . /etc/os-release
+  add_repo docker "https://download.docker.com/linux/${ID}/gpg" "https://download.docker.com/linux/${ID}" "$VERSION_CODENAME" stable
+  $STD apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  mkdir -p /etc/docker
+  echo '{ "log-driver": "json-file", "log-opts": { "max-size": "10m", "max-file": "3" } }' >/etc/docker/daemon.json
+  systemctl enable -q --now docker
+  msg_ok "Installed Docker $(docker version --format '{{.Server.Version}}')"
+}
+
+# Radarr, Sonarr and Prowlarr share one install shape.
+# install_servarr <slug> <Name> <port> <tarball-url>
+install_servarr() {
+  local slug="$1" name="$2" port="$3" url="$4" icu
+  msg_info "Installing dependencies"
+  icu=$(apt-cache search --names-only '^libicu[0-9]+$' | awk '{print $1}' | sort -V | tail -n1)
+  $STD apt-get install -y sqlite3 "$icu"
+  msg_ok "Installed dependencies"
+
+  msg_info "Installing ${name}"
+  getent group media >/dev/null || groupadd -g 1000 media
+  id -u "$slug" >/dev/null 2>&1 || useradd -r -g media -d "/var/lib/${slug}" -s /usr/sbin/nologin "$slug"
+  mkdir -p "/var/lib/${slug}" /data/media /data/downloads
+  fetch "$url" | tar -xz -C /opt
+  chown -R "${slug}:media" "/opt/${name}" "/var/lib/${slug}"
+  chgrp media /data /data/media /data/downloads
+  chmod 775 /data /data/media /data/downloads
+  cat >"/etc/systemd/system/${slug}.service" <<EOF
+[Unit]
+Description=${name}
+After=network.target
+
+[Service]
+User=${slug}
+Group=media
+UMask=0002
+Type=simple
+ExecStart=/opt/${name}/${name} -nobrowser -data=/var/lib/${slug}/
+TimeoutStopSec=20
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  systemctl enable -q --now "$slug"
+  msg_ok "Installed ${name} on port ${port}"
+}
+
+# Runs a compose stack stored in /opt/<dir>/compose.yaml (the caller writes the file first).
+compose_up() {
+  msg_info "Starting ${APP}"
+  $STD docker compose -f "/opt/$1/compose.yaml" up -d
+  msg_ok "Started ${APP}"
+}
+
+# Random 20-character password (letters and digits).
+gen_pw() {
+  head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-20
+}
+
+# Saves login details to /root/<app>.creds so the user can find them later.
+save_creds() {
+  printf '%s\n' "$@" >"/root/${NSAPP}.creds"
+  chmod 600 "/root/${NSAPP}.creds"
+}
+
+motd_ssh() {
+  cat >/etc/profile.d/00_gfl-details.sh <<EOF
+echo ""
+echo -e "  \033[38;5;135mGFL Proxmox Scripts\033[m · \033[1m${APP}\033[m"
+echo -e "  IP:   \033[36m\$(hostname -I | awk '{print \$1}')\033[m"
+echo -e "  Docs: \033[36m${GFL_SITE}/#${NSAPP}\033[m"
+echo -e "  Run \033[36mupdate\033[m to update ${APP}."
+echo ""
+EOF
+  chmod -x /etc/update-motd.d/* 2>/dev/null || true
+  : >/etc/motd
+  if [ "${SSH_ROOT:-no}" = "yes" ]; then
+    $STD apt-get install -y openssh-server
+    sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    systemctl restart ssh 2>/dev/null || systemctl restart sshd
+  fi
+}
+
+customize() {
+  if [ "${PASSWORD_SET:-no}" != "yes" ]; then
+    mkdir -p /etc/systemd/system/container-getty@1.service.d
+    cat >/etc/systemd/system/container-getty@1.service.d/override.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud tty%I 115200,38400,9600 $TERM
+EOF
+    systemctl daemon-reload
+    systemctl restart "$(basename "$(readlink -f /etc/systemd/system/getty.target.wants/container-getty@1.service 2>/dev/null || echo container-getty@1.service)")" 2>/dev/null || true
+  fi
+  cat >/usr/bin/update <<EOF
+#!/usr/bin/env bash
+export GFL_RAW="${GFL_RAW}"
+bash -c "\$(curl -fsSL ${GFL_RAW}/ct/${NSAPP}.sh)"
+EOF
+  chmod +x /usr/bin/update
+}
+
+cleanup_lxc() {
+  msg_info "Cleaning up"
+  $STD apt-get -y autoremove
+  $STD apt-get -y autoclean
+  rm -rf /opt/gfl
+  msg_ok "Cleaned up"
+}

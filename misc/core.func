@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# GFL Proxmox Scripts - shared helpers (colors, messages, errors).
+# Sourced by build.func on the Proxmox host and by install.func inside the container.
+
+# Where every script is downloaded from. Override to test a fork or a local clone:
+#   GFL_RAW=file:///root/gfl-proxmox bash ct/jellyfin.sh
+GFL_RAW="${GFL_RAW:-https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main}"
+GFL_SITE="${GFL_SITE:-https://gamersforlive.github.io/gfl-proxmox}"
+export GFL_RAW GFL_SITE
+
+color() {
+  YW=$'\033[33m'
+  BL=$'\033[36m'
+  PU=$'\033[38;5;135m'
+  RD=$'\033[01;31m'
+  GN=$'\033[1;92m'
+  DGN=$'\033[32m'
+  BOLD=$'\033[1m'
+  CL=$'\033[m'
+  TAB="  "
+  CM="${TAB}${GN}✔${CL}"
+  CROSS="${TAB}${RD}✖${CL}"
+  WARN="${TAB}${YW}!${CL}"
+  INFO="${TAB}${BL}i${CL}"
+}
+
+# ---- spinner -----------------------------------------------------------------
+SPINNER_PID=""
+spinner() {
+  local frames='|/-\' i=0
+  while true; do
+    printf "\r\033[K${TAB}${PU}%s${CL} %s" "${frames:i++%4:1}" "$SPINNER_MSG"
+    sleep 0.12
+  done
+}
+stop_spinner() {
+  if [ -n "$SPINNER_PID" ] && kill -0 "$SPINNER_PID" 2>/dev/null; then
+    kill "$SPINNER_PID" 2>/dev/null
+    wait "$SPINNER_PID" 2>/dev/null || true
+  fi
+  SPINNER_PID=""
+  printf "\r\033[K"
+}
+
+msg_info() {
+  stop_spinner
+  SPINNER_MSG="$1"
+  if [ -t 1 ] && [ "${VERBOSE:-no}" != "yes" ]; then
+    spinner &
+    SPINNER_PID=$!
+    disown "$SPINNER_PID" 2>/dev/null || true
+  else
+    echo -e "${TAB}${PU}…${CL} $1"
+  fi
+}
+msg_ok()    { stop_spinner; echo -e "${CM} ${GN}$1${CL}"; }
+msg_warn()  { stop_spinner; echo -e "${WARN} ${YW}$1${CL}"; }
+msg_error() { stop_spinner; echo -e "${CROSS} ${RD}$1${CL}"; }
+
+# ---- quiet command runner ------------------------------------------------------
+# Usage: $STD apt-get install -y curl
+# Output goes to the log file unless VERBOSE=yes, and is shown when the command fails.
+GFL_LOG="${GFL_LOG:-/var/log/gfl-install.log}"
+silent() {
+  if [ "${VERBOSE:-no}" = "yes" ]; then
+    "$@"
+  else
+    "$@" >>"$GFL_LOG" 2>&1
+  fi
+}
+STD="silent"
+
+# ---- error handling ------------------------------------------------------------
+error_handler() {
+  local exit_code="$?" line="$1" cmd="$2"
+  stop_spinner
+  echo -e "\n${CROSS} ${RD}Failed${CL} (exit ${exit_code}) on line ${YW}${line}${CL}: ${BOLD}${cmd}${CL}"
+  if [ -s "$GFL_LOG" ] && [ "${VERBOSE:-no}" != "yes" ]; then
+    echo -e "${INFO} Last lines of ${GFL_LOG}:"
+    tail -n 20 "$GFL_LOG" | sed 's/^/     /'
+  fi
+  echo -e "${INFO} Help: ${BL}${GFL_SITE}/#troubleshooting${CL}"
+  exit "$exit_code"
+}
+catch_errors() {
+  set -Eeuo pipefail
+  trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
+  trap 'stop_spinner' EXIT
+}
+
+# ---- small utilities -------------------------------------------------------------
+# Latest release tag of a GitHub repo, e.g. gh_latest pterodactyl/wings -> v1.13.3
+gh_latest() {
+  # The API may answer pretty-printed or on one line; the regex handles both.
+  curl -fsSL "https://api.github.com/repos/$1/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1
+}
+
+fetch() { curl -fsSL --retry 3 "$@"; }

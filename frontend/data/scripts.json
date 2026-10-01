@@ -1,0 +1,299 @@
+{
+  "rawBase": "https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main",
+  "repo": "https://github.com/gamersforlive/gfl-proxmox",
+  "categories": [
+    { "id": "docker", "name": "Docker & containers" },
+    { "id": "media", "name": "Media & downloads" },
+    { "id": "network", "name": "Network & DNS" },
+    { "id": "security", "name": "Security & VPN" },
+    { "id": "monitoring", "name": "Monitoring" },
+    { "id": "ai", "name": "AI" },
+    { "id": "gaming", "name": "Gaming" },
+    { "id": "database", "name": "Databases" },
+    { "id": "vm", "name": "Virtual machines" },
+    { "id": "tools", "name": "Proxmox host tools" }
+  ],
+  "scripts": [
+    {
+      "slug": "docker", "name": "Docker", "type": "ct", "category": "docker",
+      "summary": "Docker Engine and the compose plugin in a lightweight container.",
+      "description": "A clean Debian container with Docker Engine and the docker compose plugin from Docker's own repository. Log rotation is set up so container logs never fill the disk. Use it for any app that ships as a compose file.",
+      "website": "https://docs.docker.com/engine/", "docs": "https://docs.docker.com/compose/",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["docker"],
+      "notes": ["Put each stack in its own folder, for example /opt/myapp/compose.yaml, then run docker compose up -d in that folder."]
+    },
+    {
+      "slug": "portainer", "name": "Portainer", "type": "ct", "category": "docker",
+      "summary": "Manage Docker containers, stacks and images from your browser.",
+      "description": "Docker plus Portainer CE (the long-term-support release). Portainer gives you a web dashboard for containers, images, volumes, networks and compose stacks.",
+      "website": "https://www.portainer.io", "docs": "https://docs.portainer.io",
+      "port": 9443, "proto": "https",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["docker"],
+      "login": "Create the admin account on first visit.",
+      "notes": ["You have 5 minutes after install to create the admin account. If you miss it, run docker restart portainer inside the container.", "Your browser warns about the self-signed certificate. That is expected; continue to the site."]
+    },
+    {
+      "slug": "dockge", "name": "Dockge", "type": "ct", "category": "docker",
+      "summary": "A friendly compose-file manager from the maker of Uptime Kuma.",
+      "description": "Docker plus Dockge. Paste or write a compose file, press deploy, and watch the logs live. Stacks are stored as plain files in /opt/stacks, so you can still manage them by hand.",
+      "website": "https://github.com/louislam/dockge", "docs": "https://github.com/louislam/dockge#readme",
+      "port": 5001,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["docker"],
+      "login": "Create your login on first visit."
+    },
+    {
+      "slug": "jellyfin", "name": "Jellyfin", "type": "ct", "category": "media",
+      "summary": "Free media server for your movies, shows and music.",
+      "description": "Jellyfin from the official Jellyfin repository, with hardware transcoding ready: if your host has an Intel or AMD GPU, it is passed into the container and the VA-API drivers are installed.",
+      "website": "https://jellyfin.org", "docs": "https://jellyfin.org/docs/",
+      "port": 8096,
+      "resources": { "cpu": 2, "ram": 2048, "disk": 16 },
+      "flags": ["gpu"],
+      "login": "Create your account in the setup wizard.",
+      "notes": ["Media folders are ready at /data/media/movies and /data/media/tv. Mount your storage there; see Storage and shared folders in the docs.", "Turn on hardware transcoding under Dashboard > Playback > Transcoding: pick VAAPI and device /dev/dri/renderD128."]
+    },
+    {
+      "slug": "radarr", "name": "Radarr", "type": "ct", "category": "media",
+      "summary": "Finds, downloads and organises movies automatically.",
+      "description": "Radarr from the official release, running as its own user in the shared media group so downloads and your library can use the same folders.",
+      "website": "https://radarr.video", "docs": "https://wiki.servarr.com/radarr",
+      "port": 7878,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 4 },
+      "login": "Radarr asks you to choose a login method on first visit.",
+      "notes": ["Radarr updates itself from Settings > General > Updates.", "Use the same /data mount in Radarr, Sonarr and qBittorrent so moves are instant hardlinks, not copies."]
+    },
+    {
+      "slug": "sonarr", "name": "Sonarr", "type": "ct", "category": "media",
+      "summary": "Finds, downloads and organises TV shows automatically.",
+      "description": "Sonarr v4 from the official release, running as its own user in the shared media group.",
+      "website": "https://sonarr.tv", "docs": "https://wiki.servarr.com/sonarr",
+      "port": 8989,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 4 },
+      "login": "Sonarr asks you to choose a login method on first visit.",
+      "notes": ["Sonarr updates itself from Settings > General > Updates."]
+    },
+    {
+      "slug": "prowlarr", "name": "Prowlarr", "type": "ct", "category": "media",
+      "summary": "One place to manage indexers for Radarr and Sonarr.",
+      "description": "Prowlarr from the official release. Add your indexers once and Prowlarr pushes them to Radarr and Sonarr.",
+      "website": "https://prowlarr.com", "docs": "https://wiki.servarr.com/prowlarr",
+      "port": 9696,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "notes": ["Connect Radarr and Sonarr under Settings > Apps using their API keys (Settings > General in each app)."]
+    },
+    {
+      "slug": "qbittorrent", "name": "qBittorrent", "type": "ct", "category": "media",
+      "summary": "Torrent client with a web UI, set up for the *arr apps.",
+      "description": "qbittorrent-nox (web UI only). Downloads go to /data/downloads, a random admin password is generated for you, and the process runs in the shared media group.",
+      "website": "https://www.qbittorrent.org", "docs": "https://github.com/qbittorrent/qBittorrent/wiki",
+      "port": 8090,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 8 },
+      "login": "User admin. The password is in /root/qbittorrent.creds inside the container.",
+      "notes": ["Read the password from the Proxmox host with: pct exec <ID> -- cat /root/qbittorrent.creds"]
+    },
+    {
+      "slug": "adguard", "name": "AdGuard Home", "type": "ct", "category": "network",
+      "summary": "Blocks ads and trackers for every device on your network.",
+      "description": "AdGuard Home installed with the official installer as a system service. It answers DNS for your whole network and filters ads, trackers and malware domains.",
+      "website": "https://adguard.com/adguard-home/overview.html", "docs": "https://github.com/AdguardTeam/AdGuardHome/wiki",
+      "port": 3000,
+      "resources": { "cpu": 1, "ram": 512, "disk": 2 },
+      "login": "Create your login in the setup wizard.",
+      "notes": ["Give this container a static IP (Advanced settings) before you point your router's DNS at it.", "After the wizard the web UI moves to port 80 unless you choose another port."]
+    },
+    {
+      "slug": "nginx-proxy-manager", "name": "Nginx Proxy Manager", "type": "ct", "category": "network",
+      "summary": "Reverse proxy with free SSL certificates and a simple web UI.",
+      "description": "Nginx Proxy Manager in Docker. Point your domains at it and it routes each one to the right app, with Let's Encrypt certificates renewed automatically.",
+      "website": "https://nginxproxymanager.com", "docs": "https://nginxproxymanager.com/guide/",
+      "port": 81,
+      "resources": { "cpu": 2, "ram": 1024, "disk": 8 },
+      "flags": ["docker"],
+      "login": "Create the admin account on first visit.",
+      "notes": ["Forward ports 80 and 443 on your router to this container's IP."]
+    },
+    {
+      "slug": "caddy", "name": "Caddy", "type": "ct", "category": "network",
+      "summary": "Web server and reverse proxy with automatic HTTPS.",
+      "description": "Caddy from the official repository. Write a two-line Caddyfile per site and Caddy gets and renews the certificates itself.",
+      "website": "https://caddyserver.com", "docs": "https://caddyserver.com/docs/",
+      "port": 80,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "notes": ["Edit /etc/caddy/Caddyfile, then run systemctl reload caddy."]
+    },
+    {
+      "slug": "cloudflared", "name": "Cloudflared", "type": "ct", "category": "network",
+      "summary": "Publish apps through a Cloudflare Tunnel without opening ports.",
+      "description": "The cloudflared connector from Cloudflare's repository. Create a tunnel in the Cloudflare dashboard and paste its token to connect.",
+      "website": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/", "docs": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/",
+      "resources": { "cpu": 1, "ram": 512, "disk": 2 },
+      "notes": ["Inside the container run: cloudflared service install <your tunnel token>"]
+    },
+    {
+      "slug": "wg-easy", "name": "WireGuard (wg-easy)", "type": "ct", "category": "security",
+      "summary": "Your own VPN with a web UI for adding phones and laptops.",
+      "description": "wg-easy v15 in Docker: a WireGuard server with a web page where you add clients and scan a QR code on your phone. The script loads the WireGuard kernel module on the host.",
+      "website": "https://github.com/wg-easy/wg-easy", "docs": "https://wg-easy.github.io/wg-easy/latest/",
+      "port": 51821,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "login": "Create the admin account in the setup wizard.",
+      "notes": ["Forward UDP port 51820 on your router to this container.", "The web UI runs over plain HTTP on your LAN. Do not expose port 51821 to the internet."]
+    },
+    {
+      "slug": "vaultwarden", "name": "Vaultwarden", "type": "ct", "category": "security",
+      "summary": "Lightweight Bitwarden-compatible password manager.",
+      "description": "Vaultwarden in Docker. Works with the official Bitwarden apps and browser extensions.",
+      "website": "https://github.com/dani-garcia/vaultwarden", "docs": "https://github.com/dani-garcia/vaultwarden/wiki",
+      "port": 8000,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "flags": ["docker"],
+      "login": "Create your account on first visit, then turn off sign-ups.",
+      "notes": ["Browsers only allow the web vault over HTTPS. Put it behind Nginx Proxy Manager, Caddy or a Cloudflare Tunnel.", "After creating your accounts, set SIGNUPS_ALLOWED=false in /opt/vaultwarden/compose.yaml and run docker compose up -d."]
+    },
+    {
+      "slug": "uptime-kuma", "name": "Uptime Kuma", "type": "ct", "category": "monitoring",
+      "summary": "Watch your sites and servers and get pinged when one goes down.",
+      "description": "Uptime Kuma from source on Node.js 22. Monitors HTTP, TCP, ping, DNS and game servers, and alerts you on Discord, Telegram, email and more.",
+      "website": "https://github.com/louislam/uptime-kuma", "docs": "https://github.com/louislam/uptime-kuma/wiki",
+      "port": 3001,
+      "resources": { "cpu": 1, "ram": 1024, "disk": 4 },
+      "login": "Create the admin account on first visit."
+    },
+    {
+      "slug": "grafana", "name": "Grafana", "type": "ct", "category": "monitoring",
+      "summary": "Dashboards and graphs for all your metrics.",
+      "description": "Grafana OSS from the official repository. Add a data source (Prometheus, InfluxDB, MariaDB, PostgreSQL and many more) and build dashboards.",
+      "website": "https://grafana.com/oss/grafana/", "docs": "https://grafana.com/docs/grafana/latest/",
+      "port": 3000,
+      "resources": { "cpu": 1, "ram": 512, "disk": 4 },
+      "login": "admin / admin. Grafana makes you change it on first login."
+    },
+    {
+      "slug": "ollama", "name": "Ollama", "type": "ct", "category": "ai",
+      "summary": "Run large language models on your own hardware.",
+      "description": "Ollama with its API open to your network on port 11434. If the host has an Intel or AMD GPU it is passed in; NVIDIA needs the extra steps in the GPU passthrough guide.",
+      "website": "https://ollama.com", "docs": "https://github.com/ollama/ollama/tree/main/docs",
+      "port": 11434,
+      "resources": { "cpu": 4, "ram": 8192, "disk": 40 },
+      "flags": ["gpu"],
+      "notes": ["Download a model inside the container: ollama pull llama3.2", "Give it more RAM than the model size. A 7-8B model wants about 8 GB."]
+    },
+    {
+      "slug": "open-webui", "name": "Open WebUI", "type": "ct", "category": "ai",
+      "summary": "A ChatGPT-style chat page for your Ollama models.",
+      "description": "Open WebUI in Docker. Connect it to your Ollama container and chat with your models from any browser.",
+      "website": "https://openwebui.com", "docs": "https://docs.openwebui.com",
+      "port": 8080,
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "flags": ["docker"],
+      "login": "The first account you create becomes the admin.",
+      "notes": ["Add Ollama under Admin Panel > Settings > Connections: http://<ollama-ip>:11434"]
+    },
+    {
+      "slug": "minecraft", "name": "Minecraft (Paper)", "type": "ct", "category": "gaming",
+      "summary": "A fast Paper Minecraft server on the newest stable version.",
+      "description": "Paper, the high-performance Minecraft server, on Java 25. The server gets most of the container's memory, runs as a service, and has a console you can open any time.",
+      "website": "https://papermc.io", "docs": "https://docs.papermc.io/paper",
+      "port": 25565, "proto": "minecraft",
+      "resources": { "cpu": 2, "ram": 4096, "disk": 16 },
+      "notes": ["The script asks you to accept the Minecraft EULA first.", "Open the live console inside the container with mc-console. Leave it with Ctrl+A, then D.", "Switch Minecraft versions: MC_VERSION=26.2 /opt/minecraft/paper-update.sh, then systemctl restart minecraft."]
+    },
+    {
+      "slug": "pterodactyl-wings", "name": "Pterodactyl Wings", "type": "ct", "category": "gaming",
+      "summary": "Add this Proxmox host as a game-server node to your Pterodactyl panel.",
+      "description": "Docker plus the Wings daemon. Wings waits until you paste the node configuration from your Pterodactyl panel, then runs your game servers in Docker.",
+      "website": "https://pterodactyl.io", "docs": "https://pterodactyl.io/wings/1.0/installing.html",
+      "resources": { "cpu": 4, "ram": 8192, "disk": 64 },
+      "flags": ["docker"],
+      "notes": ["In your panel go to Admin > Nodes > your node > Configuration and copy the config.", "Paste it into /etc/pterodactyl/config.yml inside the container, then run systemctl start wings.", "Allocate game ports in the panel and forward them on your router to this container's IP."]
+    },
+    {
+      "slug": "mariadb", "name": "MariaDB", "type": "ct", "category": "database",
+      "summary": "MySQL-compatible database server, reachable from your network.",
+      "description": "MariaDB from Debian, listening on all interfaces with an admin user and a random password.",
+      "website": "https://mariadb.org", "docs": "https://mariadb.com/kb/en/documentation/",
+      "port": 3306, "proto": "mysql",
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "login": "User admin. The password is in /root/mariadb.creds inside the container."
+    },
+    {
+      "slug": "postgresql", "name": "PostgreSQL", "type": "ct", "category": "database",
+      "summary": "PostgreSQL database server, reachable from your network.",
+      "description": "PostgreSQL from Debian, listening on all interfaces with password login. The postgres user gets a random password.",
+      "website": "https://www.postgresql.org", "docs": "https://www.postgresql.org/docs/current/",
+      "port": 5432, "proto": "postgresql",
+      "resources": { "cpu": 1, "ram": 1024, "disk": 8 },
+      "login": "User postgres. The password is in /root/postgresql.creds inside the container."
+    },
+    {
+      "slug": "haos-vm", "name": "Home Assistant OS", "type": "vm", "category": "vm", "script": "vm/haos-vm.sh",
+      "summary": "The full Home Assistant OS as a VM, add-ons included.",
+      "description": "Downloads the newest official Home Assistant OS image and creates a UEFI virtual machine from it. Home Assistant OS updates itself and supports add-ons, which the container versions cannot.",
+      "website": "https://www.home-assistant.io", "docs": "https://www.home-assistant.io/installation/generic-x86-64",
+      "port": 8123,
+      "resources": { "cpu": 2, "ram": 4096, "disk": 32, "os": "Home Assistant OS" },
+      "login": "Create your account in the onboarding screen.",
+      "notes": ["First boot takes a few minutes. Then open http://homeassistant.local:8123 or the VM's IP on port 8123.", "Pass a Zigbee or Z-Wave USB stick through under the VM's Hardware > Add > USB Device."]
+    },
+    {
+      "slug": "debian-vm", "name": "Debian 13 VM", "type": "vm", "category": "vm", "script": "vm/debian-vm.sh",
+      "summary": "A clean Debian 13 virtual machine set up with cloud-init.",
+      "description": "Creates a VM from the official Debian 13 cloud image and sets your user, password and SSH keys with cloud-init. Boots in seconds; no installer to click through.",
+      "website": "https://www.debian.org", "docs": "https://pve.proxmox.com/wiki/Cloud-Init_Support",
+      "resources": { "cpu": 2, "ram": 2048, "disk": 32 },
+      "login": "User gfl with the password you choose during the script.",
+      "notes": ["Install the guest agent in the VM so Proxmox can show its IP: sudo apt install qemu-guest-agent"]
+    },
+    {
+      "slug": "post-pve-install", "name": "Post-install setup", "type": "tool", "category": "tools", "script": "tools/post-pve-install.sh",
+      "summary": "Fix the repositories and pop-up on a fresh Proxmox install.",
+      "description": "Run this first on a new Proxmox VE 8 or 9 host without a subscription. It asks before every step: disable the enterprise repositories, add the free no-subscription repository, hide the subscription pop-up, turn off high availability on single hosts, update, and reboot.",
+      "website": "https://pve.proxmox.com/wiki/Package_Repositories", "docs": "https://pve.proxmox.com/wiki/Package_Repositories",
+      "notes": ["Safe to run again. Answer No to any step you want to skip."]
+    },
+    {
+      "slug": "update-lxcs", "name": "Update all containers", "type": "tool", "category": "tools", "script": "tools/update-lxcs.sh",
+      "summary": "Update the OS packages in every running container at once.",
+      "description": "Lists your running containers, lets you untick any you want to skip, then updates Debian, Ubuntu and Alpine containers one by one. At the end it tells you which ones want a reboot.",
+      "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/wiki/Linux_Container",
+      "notes": ["This updates the OS packages. To update an app itself, run update inside its container."]
+    },
+    {
+      "slug": "clean-kernels", "name": "Clean old kernels", "type": "tool", "category": "tools", "script": "tools/clean-kernels.sh",
+      "summary": "Free up boot space by removing old Proxmox kernels.",
+      "description": "Shows the old kernel packages you can remove. The running kernel and the newest installed kernel are never offered.",
+      "website": "https://pve.proxmox.com/wiki/Host_Bootloader", "docs": "https://pve.proxmox.com/wiki/Host_Bootloader"
+    },
+    {
+      "slug": "microcode", "name": "CPU microcode", "type": "tool", "category": "tools", "script": "tools/microcode.sh",
+      "summary": "Install Intel or AMD CPU microcode updates.",
+      "description": "Detects your CPU vendor and installs the matching microcode package, which carries security and stability fixes from Intel or AMD.",
+      "website": "https://wiki.debian.org/Microcode", "docs": "https://wiki.debian.org/Microcode",
+      "notes": ["Reboot the host afterwards to load the new microcode."]
+    },
+    {
+      "slug": "add-tailscale-lxc", "name": "Add Tailscale to a container", "type": "tool", "category": "tools", "script": "tools/add-tailscale-lxc.sh",
+      "summary": "Put any existing container on your Tailscale network.",
+      "description": "Pick a Debian or Ubuntu container. The tool passes /dev/net/tun into it, restarts it and installs Tailscale.",
+      "website": "https://tailscale.com", "docs": "https://tailscale.com/kb/1130/lxc-unprivileged",
+      "notes": ["Afterwards run pct exec <ID> -- tailscale up and open the link it prints."]
+    },
+    {
+      "slug": "add-gpu-lxc", "name": "Add GPU to a container", "type": "tool", "category": "tools", "script": "tools/add-gpu-lxc.sh",
+      "summary": "Give an existing container the host's Intel or AMD GPU.",
+      "description": "Passes every /dev/dri device into the container you pick, so apps like Jellyfin, Plex, Frigate or Immich can use hardware acceleration.",
+      "website": "https://pve.proxmox.com/wiki/Linux_Container", "docs": "https://pve.proxmox.com/pve-docs/pct.1.html"
+    },
+    {
+      "slug": "host-backup", "name": "Host config backup", "type": "tool", "category": "tools", "script": "tools/host-backup.sh",
+      "summary": "Back up the Proxmox host's own configuration files.",
+      "description": "Saves /etc (including /etc/pve), /root and the cluster database as a dated archive and keeps the newest 10. It prints a one-line cron entry to run it daily.",
+      "website": "https://pve.proxmox.com/wiki/Proxmox_Cluster_File_System_(pmxcfs)", "docs": "https://pve.proxmox.com/wiki/Backup_and_Restore",
+      "notes": ["Save to a NAS or USB mount. A backup on the same disk does not survive a dead disk."]
+    }
+  ]
+}

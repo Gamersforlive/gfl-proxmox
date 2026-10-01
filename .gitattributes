@@ -1,0 +1,4 @@
+# Scripts run on Linux: always check them out with LF line endings, even on Windows.
+*.sh    text eol=lf
+*.func  text eol=lf
+*       text=auto

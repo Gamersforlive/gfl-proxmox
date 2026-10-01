@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# GFL Proxmox Scripts - helpers for host tools (tools/*.sh) and VM scripts (vm/*.sh).
+
+# shellcheck source=/dev/null
+source <(curl -fsSL "${GFL_RAW:-https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main}/misc/core.func")
+
+BACKTITLE="GFL Proxmox Scripts"
+GFL_LOG="/var/log/gfl-tools.log"
+
+tool_header() {
+  clear 2>/dev/null || true
+  echo -e "\n   ${PU}GFL Proxmox Scripts${CL} · ${BOLD}$1${CL}\n"
+}
+
+require_pve() {
+  if [ "$(id -u)" -ne 0 ]; then
+    msg_error "Run this as root in the Proxmox host shell."
+    exit 1
+  fi
+  if ! command -v pveversion >/dev/null 2>&1; then
+    msg_error "This must run on a Proxmox VE host, not inside a container or VM."
+    exit 1
+  fi
+}
+
+pve_major() { pveversion | sed -E 's|.*pve-manager/([0-9]+)\..*|\1|'; }
+
+cancelled() {
+  echo -e "${CROSS} ${YW}Cancelled. Nothing was changed.${CL}"
+  exit 0
+}
+
+confirm() { # confirm "Title" "Question" -> 0 yes, 1 no
+  whiptail --backtitle "$BACKTITLE" --title "$1" --yesno "$2" 12 70
+}
+
+# pick_ct VAR "Question" -> sets VAR to a container ID the user picked
+pick_ct() {
+  local var="$1" prompt="$2" pick id status name
+  local -a menu=()
+  while read -r id status _ name; do
+    menu+=("$id" "${name:-?} (${status})")
+  done < <(pct list | awk 'NR>1 {print $1, $2, $3, $NF}')
+  if [ "${#menu[@]}" -eq 0 ]; then
+    msg_error "There are no containers on this host."
+    exit 1
+  fi
+  pick=$(whiptail --backtitle "$BACKTITLE" --title "Containers" --menu "$prompt" 18 64 10 "${menu[@]}" 3>&1 1>&2 2>&3) || cancelled
+  printf -v "$var" '%s' "$pick"
+}
+
+# First unused devN index in a container's config.
+next_dev_index() {
+  local i=0
+  while pct config "$1" | grep -q "^dev${i}:"; do i=$((i + 1)); done
+  echo "$i"
+}
+
+# pick_storage VAR content -> sets VAR to a storage that can hold that content type
+pick_storage() {
+  local var="$1" content="$2" name type avail pick
+  local -a menu=()
+  while read -r name type _ _ _ avail _; do
+    menu+=("$name" "${type}, $((avail / 1024 / 1024)) GB free" "OFF")
+  done < <(pvesm status -content "$content" -enabled 1 2>/dev/null | awk 'NR>1')
+  if [ "${#menu[@]}" -eq 0 ]; then
+    msg_error "No storage accepts '${content}'. Enable it under Datacenter > Storage."
+    exit 1
+  fi
+  if [ "${#menu[@]}" -eq 3 ] || [ "${GFL_MODE:-}" = "default" ]; then
+    printf -v "$var" '%s' "${menu[0]}"
+    return
+  fi
+  menu[2]="ON"
+  pick=$(whiptail --backtitle "$BACKTITLE" --title "Storage" --radiolist \
+    "Where should the disk go? (space to select)" 16 64 6 "${menu[@]}" 3>&1 1>&2 2>&3) || cancelled
+  printf -v "$var" '%s' "$pick"
+}

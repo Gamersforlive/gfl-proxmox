@@ -1,0 +1,358 @@
+#!/usr/bin/env bash
+# GFL Proxmox Scripts - builds an LXC container on the Proxmox host, then runs the
+# app's installer inside it. Every ct/<app>.sh script sources this file.
+#
+# A ct script sets APP and var_* defaults, then calls:
+#   header_info; variables; color; catch_errors; start; build_container; finish
+#
+# Any var_* can be overridden from the shell, e.g.:
+#   var_cpu=4 var_ram=4096 bash -c "$(curl -fsSL .../ct/jellyfin.sh)"
+#   GFL_MODE=default  -> skip the menu and use the defaults (handy for automation)
+
+# shellcheck source=/dev/null
+source <(curl -fsSL "${GFL_RAW:-https://raw.githubusercontent.com/gamersforlive/gfl-proxmox/main}/misc/core.func")
+
+BACKTITLE="GFL Proxmox Scripts"
+
+header_info() {
+  clear 2>/dev/null || true
+  cat <<'EOF'
+     ____ _____ _       ____
+    / ___|  ___| |     |  _ \ _ __ _____  ___ __ ___   _____  __
+   | |  _| |_  | |     | |_) | '__/ _ \ \/ / '_ ` _ \ / _ \ \/ /
+   | |_| |  _| | |___  |  __/| | | (_) >  <| | | | | | (_) >  <
+    \____|_|   |_____| |_|   |_|  \___/_/\_\_| |_| |_|\___/_/\_\
+EOF
+  echo -e "   ${PU:-}GamersForLive${CL:-} · ${BOLD:-}${APP:-}${CL:-}\n"
+}
+
+variables() {
+  NSAPP="${var_slug:-$(echo "${APP,,}" | tr ' ' '-')}"
+  var_install="${NSAPP}-install"
+  var_cpu="${var_cpu:-1}"
+  var_ram="${var_ram:-512}"
+  var_disk="${var_disk:-4}"
+  var_os="${var_os:-debian}"
+  var_version="${var_version:-13}"
+  var_unprivileged="${var_unprivileged:-1}"
+  var_docker="${var_docker:-no}"
+  var_gpu="${var_gpu:-no}"
+  var_tun="${var_tun:-no}"
+  var_tags="${var_tags:-}"
+  VERBOSE="${VERBOSE:-no}"
+}
+
+exit_script() {
+  clear 2>/dev/null || true
+  echo -e "${CROSS} ${YW}Cancelled. Nothing was changed.${CL}\n"
+  exit 0
+}
+
+# ---- host checks -----------------------------------------------------------------
+check_root() {
+  if [ "$(id -u)" -ne 0 ]; then
+    msg_error "Run this as root in the Proxmox host shell (Datacenter > your node > Shell)."
+    exit 1
+  fi
+}
+
+pve_check() {
+  if ! pveversion | grep -Eq "pve-manager/(8\.([2-9]|[1-9][0-9])|9\.[0-9]+)"; then
+    msg_error "This needs Proxmox VE 8.2 or newer. You have: $(pveversion | cut -d/ -f2)"
+    exit 1
+  fi
+}
+
+arch_check() {
+  if [ "$(dpkg --print-architecture)" != "amd64" ]; then
+    msg_error "Only amd64 (x86-64) hosts are supported."
+    exit 1
+  fi
+}
+
+# ---- settings --------------------------------------------------------------------
+default_settings() {
+  CT_ID="${CT_ID:-$(pvesh get /cluster/nextid)}"
+  HN="${HN:-$NSAPP}"
+  DISK_SIZE="$var_disk"
+  CORE_COUNT="$var_cpu"
+  RAM_SIZE="$var_ram"
+  BRG="${BRG:-vmbr0}"
+  NET="${NET:-dhcp}"
+  GATE="${GATE:-}"
+  VLAN="${VLAN:-}"
+  CT_TYPE="$var_unprivileged"
+  PW="${PW:-}"
+  SSH="${SSH:-no}"
+  GPU="$var_gpu"
+  if [ ! -e /dev/dri/renderD128 ]; then GPU="no"; fi
+}
+
+show_summary() {
+  local type="Unprivileged"
+  if [ "$CT_TYPE" = "0" ]; then type="Privileged"; fi
+  echo -e "${INFO} Container ID:  ${BL}${CT_ID}${CL}"
+  echo -e "${INFO} Hostname:      ${BL}${HN}${CL}"
+  echo -e "${INFO} OS:            ${BL}${var_os} ${var_version}${CL} (${type})"
+  echo -e "${INFO} CPU / RAM:     ${BL}${CORE_COUNT} cores / ${RAM_SIZE} MiB${CL}"
+  echo -e "${INFO} Disk:          ${BL}${DISK_SIZE} GB${CL}"
+  echo -e "${INFO} Network:       ${BL}${BRG}, ${NET}${GATE:+ via ${GATE}}${VLAN:+, VLAN ${VLAN}}${CL}"
+  if [ "$GPU" = "yes" ]; then echo -e "${INFO} GPU:           ${BL}/dev/dri passed through${CL}"; fi
+  echo
+}
+
+ask() { # ask VAR "Title" "Question" "default" -> sets VAR; Esc/Cancel stops the script
+  local answer
+  answer=$(whiptail --backtitle "$BACKTITLE" --title "$2" --inputbox "$3" 10 64 "$4" 3>&1 1>&2 2>&3) || exit_script
+  printf -v "$1" '%s' "$answer"
+}
+
+advanced_settings() {
+  default_settings
+  ask CT_ID "Container ID" "Container ID (must be unused)" "$CT_ID"
+  if pct status "$CT_ID" >/dev/null 2>&1 || qm status "$CT_ID" >/dev/null 2>&1; then
+    msg_error "ID ${CT_ID} is already in use."
+    exit 1
+  fi
+  ask HN "Hostname" "Hostname (letters, numbers and dashes)" "$HN"
+  HN=$(echo "$HN" | tr -cd 'a-zA-Z0-9-' | tr '[:upper:]' '[:lower:]')
+  if whiptail --backtitle "$BACKTITLE" --title "Container type" --yes-button "Unprivileged" --no-button "Privileged" \
+    --yesno "Unprivileged is safer and works for almost every app.\nPick Privileged only if an app's page tells you to." 10 64; then
+    CT_TYPE=1
+  else
+    CT_TYPE=0
+  fi
+  PW=$(whiptail --backtitle "$BACKTITLE" --title "Root password" --passwordbox \
+    "Root password for the container.\nLeave empty to log in automatically from the Proxmox console." 10 64 3>&1 1>&2 2>&3) || exit_script
+  ask CORE_COUNT "CPU" "CPU cores" "$CORE_COUNT"
+  ask RAM_SIZE "Memory" "RAM in MiB" "$RAM_SIZE"
+  ask DISK_SIZE "Disk" "Disk size in GB" "$DISK_SIZE"
+  ask BRG "Network bridge" "Bridge to connect to" "$BRG"
+  ask NET "IP address" "Type dhcp, or a static address with prefix (example: 192.168.1.50/24)" "$NET"
+  if [ "$NET" != "dhcp" ]; then
+    if ! [[ "$NET" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]]; then
+      msg_error "\"${NET}\" is not an address like 192.168.1.50/24"
+      exit 1
+    fi
+    ask GATE "Gateway" "Gateway (your router, example: 192.168.1.1)" ""
+  fi
+  ask VLAN "VLAN" "VLAN tag (leave empty for none)" ""
+  if [ -e /dev/dri/renderD128 ]; then
+    local -a def=(--defaultno)
+    if [ "$var_gpu" = "yes" ]; then def=(); fi
+    if whiptail --backtitle "$BACKTITLE" --title "GPU" "${def[@]}" --yesno \
+      "Pass the host's Intel/AMD GPU (/dev/dri) into the container?\nUsed for hardware transcoding and AI apps." 10 64; then
+      GPU="yes"
+    else
+      GPU="no"
+    fi
+  fi
+  if whiptail --backtitle "$BACKTITLE" --title "SSH" --defaultno --yesno "Allow root login over SSH?" 8 64; then
+    SSH="yes"
+  fi
+  if whiptail --backtitle "$BACKTITLE" --title "Output" --defaultno --yesno "Show every install command's output (verbose)?" 8 64; then
+    VERBOSE="yes"
+  fi
+}
+
+start() {
+  if ! command -v pveversion >/dev/null 2>&1; then
+    # Not on a Proxmox host: this is the `update` command inside a container.
+    update_script
+    exit 0
+  fi
+  check_root
+  pve_check
+  arch_check
+
+  if [ "${GFL_MODE:-}" = "default" ]; then
+    default_settings
+  else
+    local choice
+    choice=$(whiptail --backtitle "$BACKTITLE" --title "${APP}" --menu \
+      "This creates a new ${APP} container.\nThe defaults suit most people." 14 64 3 \
+      "1" "Use default settings (recommended)" \
+      "2" "Advanced: choose ID, network, size..." \
+      "3" "Cancel" 3>&1 1>&2 2>&3) || exit_script
+    case "$choice" in
+      1) default_settings ;;
+      2) advanced_settings ;;
+      *) exit_script ;;
+    esac
+  fi
+  header_info
+  show_summary
+  if [ "${GFL_MODE:-}" != "default" ]; then
+    whiptail --backtitle "$BACKTITLE" --title "${APP}" --yesno "Create container ${CT_ID} (${HN}) now?" 8 64 || exit_script
+  fi
+}
+
+# ---- storage + template ---------------------------------------------------------
+select_storage() { # select_storage VAR vztmpl|rootdir -> sets VAR to a storage name
+  local var="$1" content="$2" label="container disks" override="${GFL_STORAGE:-}" pick
+  if [ "$content" = "vztmpl" ]; then
+    label="templates"
+    override="${GFL_TEMPLATE_STORAGE:-}"
+  fi
+  if [ -n "$override" ]; then printf -v "$var" '%s' "$override"; return; fi
+  local -a menu=()
+  local name type avail
+  while read -r name type _ _ _ avail _; do
+    menu+=("$name" "${type}, $((avail / 1024 / 1024)) GB free" "OFF")
+  done < <(pvesm status -content "$content" -enabled 1 2>/dev/null | awk 'NR>1')
+  if [ "${#menu[@]}" -eq 0 ]; then
+    msg_error "No storage can hold ${label}. Enable the content type under Datacenter > Storage."
+    exit 1
+  fi
+  if [ "${#menu[@]}" -eq 3 ] || [ "${GFL_MODE:-}" = "default" ]; then
+    printf -v "$var" '%s' "${menu[0]}"
+    return
+  fi
+  menu[2]="ON"
+  pick=$(whiptail --backtitle "$BACKTITLE" --title "Storage" --radiolist \
+    "Where should the ${label} go? (space to select)" 16 64 6 "${menu[@]}" 3>&1 1>&2 2>&3) || exit_script
+  printf -v "$var" '%s' "$pick"
+}
+
+get_template() {
+  msg_info "Updating the template list"
+  pveam update >/dev/null 2>&1 || true
+  TEMPLATE=$(pveam available -section system | awk '{print $2}' | grep -E "^${var_os}-${var_version}-" | sort -V | tail -n1)
+  if [ -z "$TEMPLATE" ]; then
+    msg_error "No ${var_os} ${var_version} template is available from Proxmox."
+    exit 1
+  fi
+  msg_ok "Using template ${TEMPLATE}"
+  if ! pveam list "$TEMPLATE_STORAGE" | grep -q "$TEMPLATE"; then
+    msg_info "Downloading ${TEMPLATE}"
+    pveam download "$TEMPLATE_STORAGE" "$TEMPLATE" >/dev/null
+    msg_ok "Downloaded ${TEMPLATE}"
+  fi
+}
+
+# ---- create + install -----------------------------------------------------------
+build_container() {
+  select_storage TEMPLATE_STORAGE vztmpl
+  select_storage CONTAINER_STORAGE rootdir
+  msg_ok "Templates on ${TEMPLATE_STORAGE}, disk on ${CONTAINER_STORAGE}"
+  get_template
+
+  local features="nesting=1"
+  if [ "$CT_TYPE" = "1" ] && [ "$var_docker" = "yes" ]; then features="nesting=1,keyctl=1"; fi
+  local net="name=eth0,bridge=${BRG},ip=${NET}"
+  if [ -n "$GATE" ]; then net+=",gw=${GATE}"; fi
+  if [ -n "$VLAN" ]; then net+=",tag=${VLAN}"; fi
+  local tags="gfl"
+  if [ -n "$var_tags" ]; then tags+=";${var_tags}"; fi
+
+  local -a opts=(
+    -hostname "$HN" -cores "$CORE_COUNT" -memory "$RAM_SIZE" -swap 512
+    -rootfs "${CONTAINER_STORAGE}:${DISK_SIZE}" -net0 "$net"
+    -features "$features" -unprivileged "$CT_TYPE" -onboot 1 -tags "$tags" -timezone host
+  )
+  if [ -n "$PW" ]; then opts+=(-password "$PW"); fi
+
+  msg_info "Creating container ${CT_ID}"
+  pct create "$CT_ID" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" "${opts[@]}" >>"$GFL_LOG" 2>&1
+  msg_ok "Created container ${CT_ID}"
+
+  local dev=0 node
+  if [ "$GPU" = "yes" ]; then
+    for node in /dev/dri/renderD* /dev/dri/card*; do
+      [ -e "$node" ] || continue
+      pct set "$CT_ID" "-dev${dev}" "${node},mode=0666" >/dev/null
+      dev=$((dev + 1))
+    done
+    msg_ok "Passed the GPU (/dev/dri) into the container"
+  fi
+  if [ "$var_tun" = "yes" ]; then
+    pct set "$CT_ID" "-dev${dev}" "/dev/net/tun,mode=0666" >/dev/null
+    msg_ok "Added /dev/net/tun (needed for VPN apps)"
+  fi
+
+  msg_info "Starting container ${CT_ID}"
+  pct start "$CT_ID"
+  IP=""
+  local i
+  for i in $(seq 1 30); do
+    IP=$(pct exec "$CT_ID" -- hostname -I 2>/dev/null | awk '{print $1}') || true
+    [ -n "$IP" ] && break
+    sleep 1
+  done
+  if [ -z "$IP" ]; then
+    msg_error "Container ${CT_ID} did not get an IP address. Check bridge ${BRG} and your DHCP server."
+    exit 1
+  fi
+  msg_ok "Container ${CT_ID} is up at ${IP}"
+
+  local tmp
+  tmp=$(mktemp -d)
+  fetch "${GFL_RAW}/misc/core.func" -o "${tmp}/core.func"
+  fetch "${GFL_RAW}/misc/install.func" -o "${tmp}/install.func"
+  fetch "${GFL_RAW}/install/${var_install}.sh" -o "${tmp}/install.sh"
+  pct exec "$CT_ID" -- mkdir -p /opt/gfl
+  pct push "$CT_ID" "${tmp}/core.func" /opt/gfl/core.func
+  pct push "$CT_ID" "${tmp}/install.func" /opt/gfl/install.func
+  pct push "$CT_ID" "${tmp}/install.sh" /opt/gfl/install.sh
+  rm -rf "$tmp"
+
+  if ! pct exec "$CT_ID" -- env \
+    APP="$APP" NSAPP="$NSAPP" VERBOSE="$VERBOSE" GFL_RAW="$GFL_RAW" GFL_SITE="$GFL_SITE" \
+    CTTYPE="$CT_TYPE" GPU="$GPU" SSH_ROOT="$SSH" PASSWORD_SET="$([ -n "$PW" ] && echo yes || echo no)" \
+    TERM="${TERM:-xterm}" ${GFL_EXTRA_ENV[@]+"${GFL_EXTRA_ENV[@]}"} bash /opt/gfl/install.sh; then
+    msg_error "The ${APP} installer failed inside container ${CT_ID}."
+    echo -e "${INFO} The container is left running so you can look around: ${BL}pct enter ${CT_ID}${CL}"
+    echo -e "${INFO} Full log inside it: ${BL}/var/log/gfl-install.log${CL}. Remove it with: ${BL}pct destroy ${CT_ID} --purge${CL}"
+    exit 1
+  fi
+}
+
+description() {
+  local url="${GFL_SITE}/#${NSAPP}"
+  pct set "$CT_ID" -description "<div align='center'>
+<h2>${APP}</h2>
+<p>Installed with <a href='${GFL_SITE}' target='_blank'>GFL Proxmox Scripts</a></p>
+<p><a href='${url}' target='_blank'>Docs for this app</a> · update with the <code>update</code> command inside the container</p>
+</div>" >/dev/null
+}
+
+finish() {
+  description
+  msg_ok "Done! ${APP} is installed"
+  echo
+  echo -e "${INFO} Container ${BOLD}${CT_ID}${CL} (${HN}) at ${BL}${IP}${CL}"
+  if [ -n "${var_port:-}" ]; then
+    echo -e "${INFO} Open ${APP}: ${BL}${var_proto:-http}://${IP}:${var_port}${var_path:-}${CL}"
+  fi
+  if [ -n "${var_note:-}" ]; then
+    echo -e "${INFO} ${var_note}"
+  fi
+  echo -e "${INFO} Update later: open the container console and run ${BL}update${CL}"
+  echo
+}
+
+# ---- helpers for update_script (these run inside the container) -------------------
+require_install() {
+  if [ ! -e "$1" ]; then
+    msg_error "No ${APP} install found here (missing $1)."
+    exit 1
+  fi
+}
+
+update_packages() {
+  export DEBIAN_FRONTEND=noninteractive
+  msg_info "Updating ${APP} and the OS packages"
+  $STD apt-get update
+  $STD apt-get -y -o Dpkg::Options::="--force-confold" dist-upgrade
+  msg_ok "Updated ${APP} and the OS packages"
+}
+
+update_compose() {
+  require_install "/opt/$1/compose.yaml"
+  update_packages
+  msg_info "Pulling the newest ${APP} image"
+  $STD docker compose -f "/opt/$1/compose.yaml" pull
+  $STD docker compose -f "/opt/$1/compose.yaml" up -d
+  $STD docker image prune -f
+  msg_ok "${APP} is on the newest image"
+}

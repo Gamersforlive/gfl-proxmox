@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFL Proxmox Scripts</title>
+<meta name="description" content="One-command installers for Proxmox VE: containers, VMs and host tools, with documentation. By GamersForLive.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#" aria-label="GFL Proxmox Scripts home">
+      <span class="logo">GFL</span>
+      <span class="brand-name">Proxmox Scripts<small>by GamersForLive</small></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#" data-nav="scripts">Scripts</a>
+      <a href="#getting-started" data-nav="docs">Docs</a>
+      <a href="https://github.com/gamersforlive/gfl-proxmox" id="repo-link" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search apps and tools" autocomplete="off" aria-label="Search apps and tools">
+      <kbd>/</kbd>
+    </label>
+  </div>
+</header>
+
+<main class="page" id="app" aria-live="polite">
+  <p class="empty">Loading the script catalog…</p>
+</main>
+
+<footer class="footer">
+  <div>
+    <span>GFL Proxmox Scripts · MIT licensed · Not affiliated with Proxmox Server Solutions GmbH</span>
+    <span>Inspired by the community-scripts ProxmoxVE project</span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="docs.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
