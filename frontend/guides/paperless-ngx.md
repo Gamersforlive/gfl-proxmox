@@ -52,4 +52,12 @@ The steps above are the Docker install. For OCR in other languages add them, for
 3. Paperless reads the text (OCR), then guesses the correspondent, document type and tags. Correct a few and it learns.
 4. Search finds words inside every document, not just titles.
 
+### Change or reset the admin password
+
+The password in `.env` and `/root/paperless-ngx.creds` is only used on the very first start; editing those files later changes nothing. Change it in Paperless under your profile, or reset it from the container:
+
+```bash
+cd /opt/paperless-ngx && docker compose exec webserver python3 manage.py changepassword admin
+```
+
 Tips: set up **Mail** to import attachments from an inbox, and **Workflows** to tag documents automatically. Back up with `docker compose exec webserver document_exporter ../export`.

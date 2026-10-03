@@ -259,7 +259,11 @@ gen_pw() {
 
 # Saves login details to /root/<app>.creds so the user can find them later.
 save_creds() {
-  printf '%s\n' "$@" >"/root/${NSAPP}.creds"
+  {
+    echo "# Written by GFL Proxmox Scripts at install time, for you to look up. Editing this"
+    echo "# file does NOT change the password; change it in the app itself (see its guide)."
+    printf '%s\n' "$@"
+  } >"/root/${NSAPP}.creds"
   chmod 600 "/root/${NSAPP}.creds"
 }
 
