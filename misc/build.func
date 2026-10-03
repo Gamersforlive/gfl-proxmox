@@ -333,9 +333,13 @@ select_storage() { # select_storage VAR vztmpl|rootdir -> sets VAR to a storage 
 get_template() {
   msg_info "Updating the template list"
   pveam update >/dev/null 2>&1 || true
-  TEMPLATE=$(pveam available -section system | awk '{print $2}' | grep -E "^${var_os}-${var_version}-" | sort -V | tail -n1)
+  # The list holds templates for several CPU architectures (amd64, arm64...); only the host's
+  # own architecture can start, so filter on it before picking the newest version.
+  local arch
+  arch=$(dpkg --print-architecture)
+  TEMPLATE=$(pveam available -section system | awk '{print $2}' | grep -E "^${var_os}-${var_version}-.*_${arch}\.tar\." | sort -V | tail -n1)
   if [ -z "$TEMPLATE" ]; then
-    msg_error "No ${var_os} ${var_version} template is available from Proxmox."
+    msg_error "No ${var_os} ${var_version} template for ${arch} is available from Proxmox."
     exit 1
   fi
   msg_ok "Using template ${TEMPLATE}"
@@ -398,7 +402,13 @@ build_container() {
   fi
 
   msg_info "Starting container ${CT_ID}"
-  pct start "$CT_ID"
+  if ! pct start "$CT_ID" >>"$GFL_LOG" 2>&1; then
+    msg_error "Container ${CT_ID} was created but did not start."
+    tail -n 5 "$GFL_LOG" | sed 's/^/     /'
+    echo -e "${INFO} See why with: ${BL}pct start ${CT_ID} --debug${CL}"
+    echo -e "${INFO} Remove it with: ${BL}pct destroy ${CT_ID} --purge${CL}"
+    exit 1
+  fi
   IP=""
   local i
   for i in $(seq 1 30); do
